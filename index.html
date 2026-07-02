@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thick Fit Coaching — Exercise Video Checklist</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #ffffff;
+    --gray-50: #f9f9f9;
+    --gray-100: #f0f0f0;
+    --gray-200: #e0e0e0;
+    --gray-400: #999999;
+    --gray-600: #666666;
+    --gray-800: #333333;
+    --green: #1a6b2e;
+    --green-bg: #edf7f0;
+    --green-border: #b2dfc0;
+    --beg-bg: #f0f0f0; --beg-col: #333; --beg-bd: #ccc;
+    --int-bg: #e8e8e8; --int-col: #111; --int-bd: #bbb;
+    --adv-bg: #0a0a0a; --adv-col: #fff; --adv-bd: #0a0a0a;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  .sr-only { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0) }
+
+  /* Header */
+  .header {
+    background: var(--black);
+    padding: 1.25rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid var(--black);
+  }
+  .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .header-title { color: var(--white); font-size: 17px; font-weight: 700; letter-spacing: -0.01em; flex: 1; }
+  .header-sub { color: var(--gray-400); font-size: 12px; margin-top: 2px; }
+
+  /* Stats */
+  .stats-bar {
+    background: var(--black);
+    padding: 0 1.5rem 1rem;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .stats-inner { max-width: 900px; margin: 0 auto; display: flex; gap: 1px; }
+  .stat { flex: 1; background: var(--gray-800); padding: 10px 14px; }
+  .stat:first-child { border-radius: 6px 0 0 6px; }
+  .stat:last-child { border-radius: 0 6px 6px 0; }
+  .stat-num { font-size: 22px; font-weight: 700; color: var(--white); }
+  .stat-label { font-size: 10px; color: var(--gray-400); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Progress */
+  .progress-wrap { background: var(--black); padding: 0 1.5rem 1.25rem; }
+  .progress-inner { max-width: 900px; margin: 0 auto; }
+  .progress-track { height: 4px; background: var(--gray-800); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--white); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* Controls */
+  .controls { max-width: 900px; margin: 0 auto; padding: 1rem 1.5rem; border-bottom: 1px solid var(--gray-200); }
+  .search-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-input {
+    flex: 1; min-width: 200px; padding: 9px 14px;
+    border: 1.5px solid var(--gray-200); border-radius: 6px;
+    font-size: 13px; background: var(--white); color: var(--black);
+    outline: none; font-family: inherit;
+  }
+  .search-input:focus { border-color: var(--black); }
+  .toggle-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .toggle-track {
+    width: 34px; height: 18px; border-radius: 9px; background: var(--gray-200);
+    position: relative; transition: background 0.2s; flex-shrink: 0; cursor: pointer;
+  }
+  .toggle-track.on { background: var(--black); }
+  .toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--white); transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-track.on .toggle-knob { transform: translateX(16px); }
+  .toggle-label { font-size: 12px; color: var(--gray-600); }
+
+  .filter-row { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 8px; }
+  .filter-label { font-size: 10px; color: var(--gray-400); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; padding-top: 6px; flex-shrink: 0; min-width: 46px; }
+  .pills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pill {
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;
+    border: 1.5px solid var(--gray-200); background: var(--white); color: var(--gray-600);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: inherit;
+  }
+  .pill:hover { border-color: var(--black); color: var(--black); }
+  .pill.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* Content */
+  .content { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+  /* Group section */
+  .group-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 0 8px;
+    border-bottom: 2px solid var(--black);
+    margin-top: 24px; margin-bottom: 6px;
+  }
+  .group-emoji { font-size: 18px; }
+  .group-name { font-size: 15px; font-weight: 700; color: var(--black); flex: 1; letter-spacing: -0.01em; }
+  .group-count { font-size: 11px; color: var(--gray-400); font-weight: 500; }
+
+  /* Exercise row */
+  .ex-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    background: var(--white);
+  }
+  .ex-row:hover { background: var(--gray-50); border-color: var(--gray-400); }
+  .ex-row.done { background: var(--green-bg); border-color: var(--green-border); }
+
+  .checkbox {
+    width: 20px; height: 20px; border-radius: 4px;
+    border: 2px solid var(--gray-200); background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .ex-row.done .checkbox { background: var(--green); border-color: var(--green); }
+  .check-mark { color: var(--white); font-size: 11px; display: none; }
+  .ex-row.done .check-mark { display: block; }
+
+  .ex-name {
+    font-size: 13px; font-weight: 500; color: var(--black);
+    flex: 1; min-width: 0;
+  }
+  .ex-row.done .ex-name { text-decoration: line-through; color: var(--gray-400); font-weight: 400; }
+
+  .level-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .level-badge.Beginner { background: var(--beg-bg); color: var(--beg-col); border: 1px solid var(--beg-bd); }
+  .level-badge.Intermediate { background: var(--int-bg); color: var(--int-col); border: 1px solid var(--int-bd); }
+  .level-badge.Advanced { background: var(--adv-bg); color: var(--adv-col); border: 1px solid var(--adv-bd); }
+
+  .equip-tag { font-size: 10px; color: var(--gray-400); flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: none; }
+  @media (min-width: 520px) { .equip-tag { display: block; } }
+
+  .loc-icon { font-size: 12px; flex-shrink: 0; }
+
+  .watch-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--black); color: var(--white);
+    border: none; border-radius: 5px;
+    padding: 5px 12px; font-size: 11px; font-weight: 600;
+    text-decoration: none; flex-shrink: 0;
+    transition: background 0.15s;
+    font-family: inherit; cursor: pointer; white-space: nowrap;
+  }
+  .watch-btn:hover { background: var(--gray-800); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; padding: 1rem;
+  }
+  .modal-box {
+    background: var(--white); border-radius: 10px;
+    width: min(520px, 100%); border: 1.5px solid var(--gray-200);
+    overflow: hidden;
+  }
+  .modal-header {
+    background: var(--black); padding: 1rem 1.25rem;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .modal-title { color: var(--white); font-size: 15px; font-weight: 700; flex: 1; line-height: 1.3; }
+  .modal-close {
+    background: none; border: none; color: var(--gray-400);
+    font-size: 20px; cursor: pointer; line-height: 1; padding: 0; flex-shrink: 0; margin-top: -1px;
+  }
+  .modal-close:hover { color: var(--white); }
+  .modal-body { padding: 1.25rem; }
+  .modal-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .modal-meta-item { font-size: 11px; color: var(--gray-600); }
+  .modal-meta-dot { color: var(--gray-200); font-size: 11px; }
+
+  .thumb-wrap {
+    position: relative; border-radius: 8px; overflow: hidden;
+    margin-bottom: 14px; background: var(--gray-100);
+    aspect-ratio: 16/9;
+  }
+  .thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.2);
+  }
+  .play-circle {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .play-tri { color: var(--white); font-size: 20px; margin-left: 3px; }
+
+  .hint-box {
+    background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 12px; color: var(--gray-600); margin-bottom: 14px; line-height: 1.5;
+  }
+  .hint-box strong { color: var(--black); }
+
+  .modal-actions { display: flex; gap: 8px; }
+  .btn-yt {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--black); color: var(--white);
+    border: none; border-radius: 7px; padding: 10px 16px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    font-family: inherit; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-yt:hover { background: var(--gray-800); }
+  .btn-mark {
+    flex: 1; border-radius: 7px; padding: 10px 16px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+    border: 1.5px solid var(--gray-200); background: var(--white); color: var(--black);
+  }
+  .btn-mark:hover { border-color: var(--black); }
+  .btn-mark.marked { background: var(--green); color: var(--white); border-color: var(--green); }
+
+  .empty-state { text-align: center; padding: 4rem 1rem; color: var(--gray-400); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">Thick Fit Coaching — Exercise Video Production Checklist, 229 exercises organized by muscle group with YouTube reference videos</h2>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title">THICK FIT COACHING</div>
+      <div class="header-sub">Exercise Video Production Checklist · 229 exercises</div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Recorded</div></div>
+    <div class="stat"><div class="stat-num" id="stat-left">229</div><div class="stat-label">Remaining</div></div>
+    <div class="stat"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Complete</div></div>
+    <div class="stat"><div class="stat-num" id="stat-showing">229</div><div class="stat-label">Showing</div></div>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-row">
+    <input class="search-input" id="search" placeholder="Search exercises or muscle group..." oninput="applyFilters()">
+    <div class="toggle-wrap" onclick="toggleUnchecked()">
+      <div class="toggle-track" id="toggle-track"><div class="toggle-knob"></div></div>
+      <span class="toggle-label">Unrecorded only</span>
+    </div>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Muscle</span>
+    <div class="pills" id="group-pills"></div>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Level</span>
+    <div class="pills" id="level-pills"></div>
+    <span class="filter-label" style="margin-left:8px">Where</span>
+    <div class="pills" id="loc-pills"></div>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta" id="modal-meta"></div>
+      <a id="modal-thumb-link" href="#" target="_blank" rel="noopener noreferrer">
+        <div class="thumb-wrap">
+          <img class="thumb-img" id="modal-thumb" src="" alt="Exercise thumbnail" onerror="this.style.display='none'">
+          <div class="thumb-overlay">
+            <div class="play-circle"><span class="play-tri">▶</span></div>
+          </div>
+        </div>
+      </a>
+      <div class="hint-box"><strong>How to use:</strong> Click the thumbnail or the button below — YouTube opens in a new tab. Watch the reference, come back, and mark it as recorded.</div>
+      <div class="modal-actions">
+        <a class="btn-yt" id="modal-yt-link" href="#" target="_blank" rel="noopener noreferrer">▶ &nbsp;Watch on YouTube</a>
+        <button class="btn-mark" id="modal-mark-btn" onclick="markFromModal()">✓ Mark as recorded</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXERCISES = [
+  {id:1,group:"Glutes",name:"Bodyweight Glute Bridge",level:"Beginner",equipment:"None",loc:"Both",yt:"OUgsJ8-Vi0E"},
+  {id:2,group:"Glutes",name:"Bodyweight Hip Thrust",level:"Beginner",equipment:"Bench / Chair",loc:"Both",yt:"xDmFkJxPzeM"},
+  {id:3,group:"Glutes",name:"Clamshells",level:"Beginner",equipment:"None",loc:"Both",yt:"f3C2NKDGEwM"},
+  {id:4,group:"Glutes",name:"Donkey Kicks",level:"Beginner",equipment:"None",loc:"Both",yt:"SJ1Xuz9D-ZQ"},
+  {id:5,group:"Glutes",name:"Fire Hydrants",level:"Beginner",equipment:"None",loc:"Both",yt:"La054DcJYwc"},
+  {id:6,group:"Glutes",name:"Standing Glute Kickback",level:"Beginner",equipment:"None",loc:"Both",yt:"H7cRm8E4m1Q"},
+  {id:7,group:"Glutes",name:"Resistance Band Glute Bridge",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"OUgsJ8-Vi0E"},
+  {id:8,group:"Glutes",name:"Frog Pumps",level:"Beginner",equipment:"None",loc:"Both",yt:"0ygBTqgBjmA"},
+  {id:9,group:"Glutes",name:"Resistance Band Clamshell",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"f3C2NKDGEwM"},
+  {id:10,group:"Glutes",name:"Single-Leg Glute Bridge",level:"Intermediate",equipment:"None",loc:"Both",yt:"FMpKST4OBcQ"},
+  {id:11,group:"Glutes",name:"Dumbbell Hip Thrust (Bench)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both",yt:"xDmFkJxPzeM"},
+  {id:12,group:"Glutes",name:"Resistance Band Hip Thrust",level:"Intermediate",equipment:"Resistance Band",loc:"Both",yt:"L2FHiSBRbWI"},
+  {id:13,group:"Glutes",name:"Cable Kickback",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"gl9mSt7A0tU"},
+  {id:14,group:"Glutes",name:"Cable Hip Abduction",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"4X2uO_i3_ws"},
+  {id:15,group:"Glutes",name:"Smith Machine Hip Thrust",level:"Intermediate",equipment:"Smith Machine",loc:"Gym",yt:"2gKWvVL7fUk"},
+  {id:16,group:"Glutes",name:"Hip Abduction Machine",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"HnvWc6DgZPM"},
+  {id:17,group:"Glutes",name:"Romanian Deadlift (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"2tM1LFFxeKg"},
+  {id:18,group:"Glutes",name:"Sumo Squat to Pulse",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"ZJ8DEqCBHac"},
+  {id:19,group:"Glutes",name:"Weighted Frog Pumps",level:"Intermediate",equipment:"Plate / Dumbbell",loc:"Both",yt:"0ygBTqgBjmA"},
+  {id:20,group:"Glutes",name:"45° Back Extension (Glute Focus)",level:"Intermediate",equipment:"Hyperextension Bench",loc:"Gym",yt:"ph3pddpKzzw"},
+  {id:21,group:"Glutes",name:"Barbell Hip Thrust",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym",yt:"SEdqd9nBbQQ"},
+  {id:22,group:"Glutes",name:"Barbell Glute Bridge",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"1bOGXpGI4Z0"},
+  {id:23,group:"Glutes",name:"Single-Leg Hip Thrust (Barbell)",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym",yt:"FMpKST4OBcQ"},
+  {id:24,group:"Glutes",name:"Romanian Deadlift (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"JCXUYuzwNrM"},
+  {id:25,group:"Glutes",name:"Single-Leg Romanian Deadlift",level:"Advanced",equipment:"Dumbbell",loc:"Both",yt:"2tM1LFFxeKg"},
+  {id:26,group:"Hamstrings",name:"Good Mornings (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both",yt:"YA-h3n9L4YU"},
+  {id:27,group:"Hamstrings",name:"Resistance Band Hamstring Curl",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"fJr_TMwRjhE"},
+  {id:28,group:"Hamstrings",name:"Lying Leg Curl Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"1Tq3QdYUuHs"},
+  {id:29,group:"Hamstrings",name:"Stability Ball Hamstring Curl",level:"Intermediate",equipment:"Stability Ball",loc:"Both",yt:"O_SUo0SEOOU"},
+  {id:30,group:"Hamstrings",name:"Dumbbell Romanian Deadlift",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"2tM1LFFxeKg"},
+  {id:31,group:"Hamstrings",name:"Seated Leg Curl Machine",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"lwCUhRHhvOo"},
+  {id:32,group:"Hamstrings",name:"Cable Pull-Through",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"HSVAjJbmKdM"},
+  {id:33,group:"Hamstrings",name:"Single-Leg Dumbbell RDL",level:"Advanced",equipment:"Dumbbell",loc:"Both",yt:"2tM1LFFxeKg"},
+  {id:34,group:"Hamstrings",name:"Barbell Romanian Deadlift",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"JCXUYuzwNrM"},
+  {id:35,group:"Hamstrings",name:"Good Mornings (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"YA-h3n9L4YU"},
+  {id:36,group:"Hamstrings",name:"Nordic Hamstring Curl",level:"Advanced",equipment:"Partner / GHD",loc:"Both",yt:"d7-p6j6VMNQ"},
+  {id:37,group:"Hamstrings",name:"Glute-Ham Raise",level:"Advanced",equipment:"GHD Machine",loc:"Gym",yt:"PHqN8KIwY5c"},
+  {id:38,group:"Hamstrings",name:"Sumo Deadlift",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"WFbRHX37Nnc"},
+  {id:39,group:"Quadriceps",name:"Bodyweight Squat",level:"Beginner",equipment:"None",loc:"Both",yt:"aclHkVaku9U"},
+  {id:40,group:"Quadriceps",name:"Wall Sit",level:"Beginner",equipment:"None",loc:"Both",yt:"y-wV4Venusw"},
+  {id:41,group:"Quadriceps",name:"Sumo Squat",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"ZJ8DEqCBHac"},
+  {id:42,group:"Quadriceps",name:"Reverse Lunge (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both",yt:"xrjMX9MTUJ0"},
+  {id:43,group:"Quadriceps",name:"Forward Lunge (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both",yt:"3XDriUn0udo"},
+  {id:44,group:"Quadriceps",name:"Step-Up (Bodyweight)",level:"Beginner",equipment:"Box / Step",loc:"Both",yt:"aM7xKCvFW6s"},
+  {id:45,group:"Quadriceps",name:"Goblet Squat",level:"Beginner",equipment:"Dumbbell / Kettlebell",loc:"Both",yt:"MxsFDhcyFyE"},
+  {id:46,group:"Quadriceps",name:"Leg Extension Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"YyvSfVjQeL0"},
+  {id:47,group:"Quadriceps",name:"Dumbbell Lunge",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"D7KaRcUTQeE"},
+  {id:48,group:"Quadriceps",name:"Walking Lunge",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"L8fvypPrzzs"},
+  {id:49,group:"Quadriceps",name:"Curtsy Lunge",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"JAoXBXhX7Lg"},
+  {id:50,group:"Quadriceps",name:"Bulgarian Split Squat (Bodyweight)",level:"Intermediate",equipment:"Bench",loc:"Both",yt:"2C-uNgKwPLE"},
+  {id:51,group:"Quadriceps",name:"Dumbbell Step-Up",level:"Intermediate",equipment:"Dumbbell + Box",loc:"Both",yt:"aM7xKCvFW6s"},
+  {id:52,group:"Quadriceps",name:"Jump Squat",level:"Intermediate",equipment:"None",loc:"Both",yt:"CVaEhXotL7M"},
+  {id:53,group:"Quadriceps",name:"Leg Press",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"IZxyjW7MPJQ"},
+  {id:54,group:"Quadriceps",name:"Smith Machine Squat",level:"Intermediate",equipment:"Smith Machine",loc:"Gym",yt:"aF-3jn_6t80"},
+  {id:55,group:"Quadriceps",name:"Hack Squat Machine",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"EdtaRhBxjYo"},
+  {id:56,group:"Quadriceps",name:"Bulgarian Split Squat (Dumbbell)",level:"Advanced",equipment:"Dumbbell + Bench",loc:"Both",yt:"2C-uNgKwPLE"},
+  {id:57,group:"Quadriceps",name:"Barbell Back Squat",level:"Advanced",equipment:"Barbell + Rack",loc:"Gym",yt:"ultWZbUMPL8"},
+  {id:58,group:"Quadriceps",name:"Barbell Front Squat",level:"Advanced",equipment:"Barbell + Rack",loc:"Gym",yt:"m4ytaCJZpl0"},
+  {id:59,group:"Quadriceps",name:"Sissy Squat",level:"Advanced",equipment:"None",loc:"Both",yt:"co_2QKkRJgU"},
+  {id:60,group:"Inner Thighs",name:"Sumo Squat (Wide Stance)",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"ZJ8DEqCBHac"},
+  {id:61,group:"Inner Thighs",name:"Plié Squat Pulse",level:"Beginner",equipment:"None",loc:"Both",yt:"ZJ8DEqCBHac"},
+  {id:62,group:"Inner Thighs",name:"Resistance Band Adduction",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"QGQwkz-VJME"},
+  {id:63,group:"Inner Thighs",name:"Side Lunge",level:"Beginner",equipment:"Bodyweight",loc:"Both",yt:"gwWv7aPcD88"},
+  {id:64,group:"Inner Thighs",name:"Adductor Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"HnvWc6DgZPM"},
+  {id:65,group:"Inner Thighs",name:"Side Lunge with Dumbbell",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"gwWv7aPcD88"},
+  {id:66,group:"Inner Thighs",name:"Cossack Squat",level:"Intermediate",equipment:"None",loc:"Both",yt:"tpczTeSkHz0"},
+  {id:67,group:"Inner Thighs",name:"Cable Adduction",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"QGQwkz-VJME"},
+  {id:68,group:"Inner Thighs",name:"Copenhagen Plank",level:"Advanced",equipment:"Bench",loc:"Both",yt:"RPNW8Q7r7HI"},
+  {id:69,group:"Calves",name:"Standing Calf Raise (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both",yt:"nCmMkDqh3LM"},
+  {id:70,group:"Calves",name:"Seated Dumbbell Calf Raise",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"JbyjNymZOt0"},
+  {id:71,group:"Calves",name:"Jump Rope",level:"Beginner",equipment:"Jump Rope",loc:"Both",yt:"FJmRQ5iTXKE"},
+  {id:72,group:"Calves",name:"Seated Calf Raise Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"JbyjNymZOt0"},
+  {id:73,group:"Calves",name:"Single-Leg Calf Raise",level:"Intermediate",equipment:"Step",loc:"Both",yt:"nCmMkDqh3LM"},
+  {id:74,group:"Calves",name:"Dumbbell Standing Calf Raise",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"nCmMkDqh3LM"},
+  {id:75,group:"Calves",name:"Standing Calf Raise Machine",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"nCmMkDqh3LM"},
+  {id:76,group:"Calves",name:"Leg Press Calf Raise",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"IZxyjW7MPJQ"},
+  {id:77,group:"Calves",name:"Barbell Standing Calf Raise",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"nCmMkDqh3LM"},
+  {id:78,group:"Calves",name:"Donkey Calf Raise",level:"Advanced",equipment:"Machine",loc:"Gym",yt:"VDhNWbMCT6s"},
+  {id:79,group:"Core – Abs",name:"Dead Bug",level:"Beginner",equipment:"None",loc:"Both",yt:"gJzTv30BHiY"},
+  {id:80,group:"Core – Abs",name:"Bent-Knee Crunch",level:"Beginner",equipment:"None",loc:"Both",yt:"Xyd_fa5zoEU"},
+  {id:81,group:"Core – Abs",name:"Reverse Crunch",level:"Beginner",equipment:"None",loc:"Both",yt:"hM1vlGhFkoQ"},
+  {id:82,group:"Core – Abs",name:"Bicycle Crunch",level:"Beginner",equipment:"None",loc:"Both",yt:"9FGilxCbdz8"},
+  {id:83,group:"Core – Abs",name:"Flutter Kicks",level:"Beginner",equipment:"None",loc:"Both",yt:"ANVdMDaLFEo"},
+  {id:84,group:"Core – Abs",name:"Mountain Climbers",level:"Beginner",equipment:"None",loc:"Both",yt:"nmwgirgXLYM"},
+  {id:85,group:"Core – Abs",name:"Toe Taps",level:"Beginner",equipment:"None",loc:"Both",yt:"hM1vlGhFkoQ"},
+  {id:86,group:"Core – Abs",name:"Leg Raise (Lying)",level:"Intermediate",equipment:"None",loc:"Both",yt:"l4kQd9eWclE"},
+  {id:87,group:"Core – Abs",name:"Hollow Body Hold",level:"Intermediate",equipment:"None",loc:"Both",yt:"uSYrPL4e3x0"},
+  {id:88,group:"Core – Abs",name:"V-Up",level:"Intermediate",equipment:"None",loc:"Both",yt:"iP2fjvG0g3w"},
+  {id:89,group:"Core – Abs",name:"Russian Twist",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"wkD8rjkodUI"},
+  {id:90,group:"Core – Abs",name:"Cable Crunch",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"2fbujeH3F0E"},
+  {id:91,group:"Core – Abs",name:"Hanging Knee Raise",level:"Intermediate",equipment:"Pull-Up Bar",loc:"Both",yt:"l4kQd9eWclE"},
+  {id:92,group:"Core – Abs",name:"Hanging Leg Raise",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both",yt:"hdng3vmIEdU"},
+  {id:93,group:"Core – Abs",name:"Ab Rollout",level:"Advanced",equipment:"Ab Wheel",loc:"Both",yt:"DP3gF0TnLLY"},
+  {id:94,group:"Core – Abs",name:"Dragon Flag",level:"Advanced",equipment:"Bench",loc:"Both",yt:"pvz7k5gO-DE"},
+  {id:95,group:"Core – Abs",name:"Toes-to-Bar",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both",yt:"6y8d7S8XYFI"},
+  {id:96,group:"Core – Obliques",name:"Side Crunch",level:"Beginner",equipment:"None",loc:"Both",yt:"ZGMUGGzD9EE"},
+  {id:97,group:"Core – Obliques",name:"Side Plank",level:"Intermediate",equipment:"None",loc:"Both",yt:"wqzrb67Dwf8"},
+  {id:98,group:"Core – Obliques",name:"Side Plank Hip Dip",level:"Intermediate",equipment:"None",loc:"Both",yt:"wqzrb67Dwf8"},
+  {id:99,group:"Core – Obliques",name:"Pallof Press",level:"Intermediate",equipment:"Cable / Band",loc:"Both",yt:"AH_QZLm_0-s"},
+  {id:100,group:"Core – Obliques",name:"Woodchop (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"pAplQXk3dkU"},
+  {id:101,group:"Core – Obliques",name:"Woodchop (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"pAplQXk3dkU"},
+  {id:102,group:"Core – Obliques",name:"Suitcase Carry",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"ut3mKaFNwNE"},
+  {id:103,group:"Core – Obliques",name:"Oblique V-Up",level:"Advanced",equipment:"None",loc:"Both",yt:"ZGMUGGzD9EE"},
+  {id:104,group:"Core – Obliques",name:"Landmine Oblique Twist",level:"Advanced",equipment:"Barbell + Landmine",loc:"Gym",yt:"pAplQXk3dkU"},
+  {id:105,group:"Core – Lower Back",name:"Superman Hold",level:"Beginner",equipment:"None",loc:"Both",yt:"cc3tSPo-Dkc"},
+  {id:106,group:"Core – Lower Back",name:"Bird Dog",level:"Beginner",equipment:"None",loc:"Both",yt:"wiFNA3sqjCA"},
+  {id:107,group:"Core – Lower Back",name:"Good Mornings (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both",yt:"YA-h3n9L4YU"},
+  {id:108,group:"Core – Lower Back",name:"Back Extension (Bodyweight)",level:"Beginner",equipment:"Hyperextension Bench",loc:"Gym",yt:"ph3pddpKzzw"},
+  {id:109,group:"Core – Lower Back",name:"Dumbbell Deadlift",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"2tM1LFFxeKg"},
+  {id:110,group:"Core – Lower Back",name:"Back Extension (Weighted)",level:"Intermediate",equipment:"Hyperextension + Plate",loc:"Gym",yt:"ph3pddpKzzw"},
+  {id:111,group:"Core – Lower Back",name:"Conventional Deadlift",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"op9kVnSso6Q"},
+  {id:112,group:"Core – Lower Back",name:"Good Mornings (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"YA-h3n9L4YU"},
+  {id:113,group:"Core – Stability",name:"Forearm Plank",level:"Beginner",equipment:"None",loc:"Both",yt:"pSHjTRCQxIw"},
+  {id:114,group:"Core – Stability",name:"High Plank",level:"Beginner",equipment:"None",loc:"Both",yt:"pSHjTRCQxIw"},
+  {id:115,group:"Core – Stability",name:"Farmer's Carry",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"ut3mKaFNwNE"},
+  {id:116,group:"Core – Stability",name:"Plank with Shoulder Tap",level:"Intermediate",equipment:"None",loc:"Both",yt:"LEZq7QpDZnc"},
+  {id:117,group:"Core – Stability",name:"Plank with Hip Dip",level:"Intermediate",equipment:"None",loc:"Both",yt:"pSHjTRCQxIw"},
+  {id:118,group:"Core – Stability",name:"Bear Crawl",level:"Intermediate",equipment:"None",loc:"Both",yt:"GnSqmZLbEzY"},
+  {id:119,group:"Core – Stability",name:"Stir the Pot (Stability Ball)",level:"Advanced",equipment:"Stability Ball",loc:"Both",yt:"c2KHYFtcD2Q"},
+  {id:120,group:"Core – Stability",name:"Ab Wheel Plank Roll-Out",level:"Advanced",equipment:"Ab Wheel",loc:"Both",yt:"DP3gF0TnLLY"},
+  {id:121,group:"Back – Upper",name:"Resistance Band Lat Pulldown",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"CAwf7n6Luuc"},
+  {id:122,group:"Back – Upper",name:"Lat Pulldown (Wide Grip)",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"CAwf7n6Luuc"},
+  {id:123,group:"Back – Upper",name:"Assisted Pull-Up Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"G6ZhSsopWD8"},
+  {id:124,group:"Back – Upper",name:"Dumbbell Pullover",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both",yt:"FK4rHvOTsgg"},
+  {id:125,group:"Back – Upper",name:"Lat Pulldown (Close Grip)",level:"Intermediate",equipment:"Machine",loc:"Gym",yt:"CAwf7n6Luuc"},
+  {id:126,group:"Back – Upper",name:"Band-Assisted Pull-Up",level:"Intermediate",equipment:"Resistance Band + Bar",loc:"Both",yt:"G6ZhSsopWD8"},
+  {id:127,group:"Back – Upper",name:"Straight-Arm Lat Pushdown",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"eOWKSrE8jQ4"},
+  {id:128,group:"Back – Upper",name:"Pull-Up (Bodyweight)",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both",yt:"eGo4IYlbE5g"},
+  {id:129,group:"Back – Upper",name:"Chin-Up",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both",yt:"brhRXlOhsAM"},
+  {id:130,group:"Back – Mid",name:"Resistance Band Row",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"xQNrFHEMhI4"},
+  {id:131,group:"Back – Mid",name:"TRX / Ring Row",level:"Beginner",equipment:"TRX / Rings",loc:"Both",yt:"LcOhBIjEwbA"},
+  {id:132,group:"Back – Mid",name:"Machine Row",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"GZbfZ033f74"},
+  {id:133,group:"Back – Mid",name:"Cable Face Pull",level:"Beginner",equipment:"Cable Machine",loc:"Gym",yt:"rep-qVOkqgk"},
+  {id:134,group:"Back – Mid",name:"Band Pull-Apart",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"KMnkPM9RiV4"},
+  {id:135,group:"Back – Mid",name:"Single-Arm Dumbbell Row",level:"Beginner",equipment:"Dumbbell + Bench",loc:"Both",yt:"pYcpY20QaE8"},
+  {id:136,group:"Back – Mid",name:"Chest-Supported Dumbbell Row",level:"Beginner",equipment:"Dumbbell + Incline Bench",loc:"Both",yt:"y9WQoFJNVOI"},
+  {id:137,group:"Back – Mid",name:"Seated Cable Row",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"GZbfZ033f74"},
+  {id:138,group:"Back – Mid",name:"Dumbbell Bent-Over Row",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"6TSP1TRMUzs"},
+  {id:139,group:"Back – Mid",name:"Gorilla Row",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"pYcpY20QaE8"},
+  {id:140,group:"Back – Mid",name:"T-Bar Row",level:"Intermediate",equipment:"T-Bar Machine",loc:"Gym",yt:"j3AoSToQrqw"},
+  {id:141,group:"Back – Mid",name:"Barbell Bent-Over Row",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"6TSP1TRMUzs"},
+  {id:142,group:"Chest",name:"Push-Up (Standard)",level:"Beginner",equipment:"None",loc:"Both",yt:"IODxDxX7oi4"},
+  {id:143,group:"Chest",name:"Incline Push-Up",level:"Beginner",equipment:"Bench / Surface",loc:"Both",yt:"IODxDxX7oi4"},
+  {id:144,group:"Chest",name:"Wide Push-Up",level:"Beginner",equipment:"None",loc:"Both",yt:"IODxDxX7oi4"},
+  {id:145,group:"Chest",name:"Pec Deck Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"Z57CtFmRMxA"},
+  {id:146,group:"Chest",name:"Chest Press Machine",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"xUm0BiZCB_8"},
+  {id:147,group:"Chest",name:"Decline Push-Up",level:"Intermediate",equipment:"Bench",loc:"Both",yt:"SKPab2YC8BE"},
+  {id:148,group:"Chest",name:"Diamond Push-Up",level:"Intermediate",equipment:"None",loc:"Both",yt:"J0DXBSpgKiI"},
+  {id:149,group:"Chest",name:"Dumbbell Bench Press (Flat)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both",yt:"VmB1G1K7v94"},
+  {id:150,group:"Chest",name:"Dumbbell Bench Press (Incline)",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both",yt:"8iPEnn-ltC8"},
+  {id:151,group:"Chest",name:"Dumbbell Chest Fly (Flat)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both",yt:"eozdVDA78K0"},
+  {id:152,group:"Chest",name:"Cable Chest Fly (Low to High)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"Iwe6AmxVf7o"},
+  {id:153,group:"Chest",name:"Cable Chest Fly (High to Low)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"Iwe6AmxVf7o"},
+  {id:154,group:"Chest",name:"Smith Machine Bench Press",level:"Intermediate",equipment:"Smith Machine",loc:"Gym",yt:"xUm0BiZCB_8"},
+  {id:155,group:"Chest",name:"Barbell Bench Press (Flat)",level:"Advanced",equipment:"Barbell + Rack",loc:"Gym",yt:"rT7DgCr-3pg"},
+  {id:156,group:"Chest",name:"Barbell Bench Press (Incline)",level:"Advanced",equipment:"Barbell + Incline Rack",loc:"Gym",yt:"8iPEnn-ltC8"},
+  {id:157,group:"Shoulders",name:"Lateral Raise (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"3VcKaXpzqRo"},
+  {id:158,group:"Shoulders",name:"Front Raise (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"sOsBQF3cRis"},
+  {id:159,group:"Shoulders",name:"Rear Delt Fly (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"ttvoBkjBLzI"},
+  {id:160,group:"Shoulders",name:"Band Pull-Apart",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"KMnkPM9RiV4"},
+  {id:161,group:"Shoulders",name:"Machine Shoulder Press",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"qEwKCR5JCog"},
+  {id:162,group:"Shoulders",name:"Face Pull (Cable)",level:"Beginner",equipment:"Cable Machine",loc:"Gym",yt:"rep-qVOkqgk"},
+  {id:163,group:"Shoulders",name:"Reverse Pec Deck",level:"Beginner",equipment:"Machine",loc:"Gym",yt:"ttvoBkjBLzI"},
+  {id:164,group:"Shoulders",name:"Arnold Press",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"6Z15_WdXmVw"},
+  {id:165,group:"Shoulders",name:"Dumbbell Shoulder Press (Seated)",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"qEwKCR5JCog"},
+  {id:166,group:"Shoulders",name:"Lateral Raise (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"3VcKaXpzqRo"},
+  {id:167,group:"Shoulders",name:"Upright Row (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"amCU-ziHITM"},
+  {id:168,group:"Shoulders",name:"Pike Push-Up",level:"Intermediate",equipment:"None",loc:"Both",yt:"32-stiixoAo"},
+  {id:169,group:"Shoulders",name:"Rear Delt Fly (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"ttvoBkjBLzI"},
+  {id:170,group:"Shoulders",name:"Barbell Overhead Press",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"2yjwXTZQDDI"},
+  {id:171,group:"Shoulders",name:"Handstand Push-Up (Wall)",level:"Advanced",equipment:"Wall",loc:"Both",yt:"EStPNkgkqOM"},
+  {id:172,group:"Biceps",name:"Dumbbell Bicep Curl",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"ykJmrZ5v0Oo"},
+  {id:173,group:"Biceps",name:"Hammer Curl",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"TwD-YGVP4Bk"},
+  {id:174,group:"Biceps",name:"Resistance Band Curl",level:"Beginner",equipment:"Resistance Band",loc:"Both",yt:"ykJmrZ5v0Oo"},
+  {id:175,group:"Biceps",name:"Alternating Dumbbell Curl",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"ykJmrZ5v0Oo"},
+  {id:176,group:"Biceps",name:"Concentration Curl",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"0AUGkch3tzc"},
+  {id:177,group:"Biceps",name:"Incline Dumbbell Curl",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both",yt:"soxrZlIl35U"},
+  {id:178,group:"Biceps",name:"EZ Bar Curl",level:"Intermediate",equipment:"EZ Bar",loc:"Gym",yt:"fIWP-FRFNU0"},
+  {id:179,group:"Biceps",name:"Cable Curl (Straight Bar)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"NFzTWp2qpiE"},
+  {id:180,group:"Biceps",name:"Barbell Curl",level:"Intermediate",equipment:"Barbell",loc:"Gym",yt:"kwG2ipFRgfo"},
+  {id:181,group:"Biceps",name:"Spider Curl",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both",yt:"0AUGkch3tzc"},
+  {id:182,group:"Biceps",name:"Cross-Body Hammer Curl",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"TwD-YGVP4Bk"},
+  {id:183,group:"Biceps",name:"Chin-Up (Bicep Focus)",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both",yt:"brhRXlOhsAM"},
+  {id:184,group:"Biceps",name:"Zottman Curl",level:"Advanced",equipment:"Dumbbell",loc:"Both",yt:"ZrFZCGSGGGA"},
+  {id:185,group:"Triceps",name:"Tricep Dips (Chair / Bench)",level:"Beginner",equipment:"Chair / Bench",loc:"Both",yt:"6kALZikXxLc"},
+  {id:186,group:"Triceps",name:"Close-Grip Push-Up",level:"Beginner",equipment:"None",loc:"Both",yt:"J0DXBSpgKiI"},
+  {id:187,group:"Triceps",name:"Tricep Kickback (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both",yt:"6SS6K3lAwZ8"},
+  {id:188,group:"Triceps",name:"Tricep Pushdown (Rope)",level:"Beginner",equipment:"Cable Machine",loc:"Gym",yt:"vB5OHsJ3EMc"},
+  {id:189,group:"Triceps",name:"Overhead Tricep Extension (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"YbX7Wd8jQ-Q"},
+  {id:190,group:"Triceps",name:"Skull Crusher (Dumbbell)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both",yt:"d_KZxkY_0cM"},
+  {id:191,group:"Triceps",name:"Overhead Tricep Extension (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"YbX7Wd8jQ-Q"},
+  {id:192,group:"Triceps",name:"Tricep Kickback (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym",yt:"6SS6K3lAwZ8"},
+  {id:193,group:"Triceps",name:"Diamond Push-Up",level:"Intermediate",equipment:"None",loc:"Both",yt:"J0DXBSpgKiI"},
+  {id:194,group:"Triceps",name:"Skull Crusher (EZ Bar)",level:"Intermediate",equipment:"EZ Bar + Bench",loc:"Gym",yt:"d_KZxkY_0cM"},
+  {id:195,group:"Triceps",name:"Parallel Bar Dip",level:"Advanced",equipment:"Dip Station",loc:"Gym",yt:"6kALZikXxLc"},
+  {id:196,group:"Triceps",name:"Close-Grip Bench Press",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym",yt:"nEF0bv2FW90"},
+  {id:197,group:"Full Body",name:"Modified Burpee",level:"Beginner",equipment:"None",loc:"Both",yt:"dZgVxmf6jkA"},
+  {id:198,group:"Full Body",name:"Step-Up with Knee Drive",level:"Beginner",equipment:"Box / Step",loc:"Both",yt:"aM7xKCvFW6s"},
+  {id:199,group:"Full Body",name:"Kettlebell Swing",level:"Intermediate",equipment:"Kettlebell",loc:"Both",yt:"YSxHifyI6s8"},
+  {id:200,group:"Full Body",name:"Dumbbell Thruster",level:"Intermediate",equipment:"Dumbbell",loc:"Both",yt:"ggCikFhO-MQ"},
+  {id:201,group:"Full Body",name:"Burpee",level:"Intermediate",equipment:"None",loc:"Both",yt:"dZgVxmf6jkA"},
+  {id:202,group:"Full Body",name:"Box Jump",level:"Intermediate",equipment:"Box",loc:"Both",yt:"hxldG9FBpAg"},
+  {id:203,group:"Full Body",name:"Medicine Ball Slam",level:"Intermediate",equipment:"Medicine Ball",loc:"Both",yt:"9xOFEnxkRFo"},
+  {id:204,group:"Full Body",name:"Renegade Row",level:"Advanced",equipment:"Dumbbell",loc:"Both",yt:"EDQM_k0OECA"},
+  {id:205,group:"Full Body",name:"Turkish Get-Up",level:"Advanced",equipment:"Kettlebell",loc:"Both",yt:"0bWRPC49-KI"},
+  {id:206,group:"Full Body",name:"Man Maker",level:"Advanced",equipment:"Dumbbell",loc:"Both",yt:"EDQM_k0OECA"},
+  {id:207,group:"Full Body",name:"Kettlebell Snatch",level:"Advanced",equipment:"Kettlebell",loc:"Both",yt:"YSxHifyI6s8"},
+  {id:208,group:"Full Body",name:"Power Clean",level:"Advanced",equipment:"Barbell",loc:"Gym",yt:"RlMOHpLRS7s"},
+  {id:209,group:"Cardio",name:"Jumping Jacks",level:"Beginner",equipment:"None",loc:"Both",yt:"c4DAnQ6DtF8"},
+  {id:210,group:"Cardio",name:"High Knees",level:"Beginner",equipment:"None",loc:"Both",yt:"ZZZoCNMU48U"},
+  {id:211,group:"Cardio",name:"Butt Kicks",level:"Beginner",equipment:"None",loc:"Both",yt:"Zv7R0Mq7-vA"},
+  {id:212,group:"Cardio",name:"Jump Rope (Standard)",level:"Beginner",equipment:"Jump Rope",loc:"Both",yt:"FJmRQ5iTXKE"},
+  {id:213,group:"Cardio",name:"Lateral Shuffle",level:"Beginner",equipment:"None",loc:"Both",yt:"c4DAnQ6DtF8"},
+  {id:214,group:"Cardio",name:"Speed Skater",level:"Intermediate",equipment:"None",loc:"Both",yt:"BaKeZQERmNQ"},
+  {id:215,group:"Cardio",name:"Squat Jump",level:"Intermediate",equipment:"None",loc:"Both",yt:"CVaEhXotL7M"},
+  {id:216,group:"Cardio",name:"Treadmill Sprint Interval",level:"Intermediate",equipment:"Treadmill",loc:"Gym",yt:"ZZZoCNMU48U"},
+  {id:217,group:"Cardio",name:"Rowing Machine",level:"Beginner",equipment:"Rower",loc:"Gym",yt:"H0r_VtOoBO4"},
+  {id:218,group:"Cardio",name:"Jump Rope (Double Under)",level:"Advanced",equipment:"Jump Rope",loc:"Both",yt:"FJmRQ5iTXKE"},
+  {id:219,group:"Cardio",name:"Stationary Bike (HIIT)",level:"Advanced",equipment:"Stationary Bike",loc:"Gym",yt:"ZZZoCNMU48U"},
+  {id:220,group:"Mobility",name:"Hip Flexor Stretch",level:"Beginner",equipment:"None",loc:"Both",yt:"YQmpO9VT2X4"},
+  {id:221,group:"Mobility",name:"Pigeon Pose",level:"Beginner",equipment:"None",loc:"Both",yt:"OfRSh8sHLvo"},
+  {id:222,group:"Mobility",name:"Cat-Cow",level:"Beginner",equipment:"None",loc:"Both",yt:"kqnua4rHVVA"},
+  {id:223,group:"Mobility",name:"90/90 Hip Stretch",level:"Beginner",equipment:"None",loc:"Both",yt:"2rQNJOJlpVc"},
+  {id:224,group:"Mobility",name:"Foam Roll – Glutes",level:"Beginner",equipment:"Foam Roller",loc:"Both",yt:"nfNuS8Yz9y4"},
+  {id:225,group:"Mobility",name:"Foam Roll – Quads",level:"Beginner",equipment:"Foam Roller",loc:"Both",yt:"nfNuS8Yz9y4"},
+  {id:226,group:"Mobility",name:"World's Greatest Stretch",level:"Intermediate",equipment:"None",loc:"Both",yt:"wHG4QnEWQhE"},
+  {id:227,group:"Mobility",name:"Inchworm",level:"Beginner",equipment:"None",loc:"Both",yt:"wHG4QnEWQhE"},
+  {id:228,group:"Mobility",name:"Deep Squat Hold",level:"Beginner",equipment:"None",loc:"Both",yt:"aclHkVaku9U"},
+  {id:229,group:"Mobility",name:"Dynamic Warm-Up (Full Body)",level:"Beginner",equipment:"None",loc:"Both",yt:"wHG4QnEWQhE"},
+];
+
+const GE = {"Glutes":"🍑","Hamstrings":"🦵","Quadriceps":"🦵","Inner Thighs":"🦵","Calves":"🦶","Core – Abs":"💪","Core – Obliques":"💪","Core – Lower Back":"💪","Core – Stability":"💪","Back – Upper":"🏋️","Back – Mid":"🏋️","Chest":"🏋️","Shoulders":"💪","Biceps":"💪","Triceps":"💪","Full Body":"⚡","Cardio":"🏃","Mobility":"🧘"};
+const GROUPS = [...new Set(EXERCISES.map(e => e.group))];
+
+let checked = JSON.parse(localStorage.getItem('tf_checked') || '{}');
+let activeGroup = 'All', activeLevel = 'All', activeLoc = 'All', searchQ = '', uncheckedOnly = false;
+let activeModal = null;
+
+function save() { try { localStorage.setItem('tf_checked', JSON.stringify(checked)); } catch(e){} }
+
+function ytUrl(id) { return `https://www.youtube.com/watch?v=${id}`; }
+
+function filtered() {
+  return EXERCISES.filter(e => {
+    if (activeGroup !== 'All' && e.group !== activeGroup) return false;
+    if (activeLevel !== 'All' && e.level !== activeLevel) return false;
+    if (activeLoc === 'Home' && e.loc === 'Gym') return false;
+    if (activeLoc === 'Gym' && e.loc === 'Both') return false;
+    if (uncheckedOnly && checked[e.id]) return false;
+    if (searchQ && !e.name.toLowerCase().includes(searchQ) && !e.group.toLowerCase().includes(searchQ)) return false;
+    return true;
+  });
+}
+
+function toggleCheck(id, event) {
+  if (event) event.stopPropagation();
+  checked[id] = !checked[id];
+  save();
+  updateStats();
+  const row = document.getElementById('row-' + id);
+  if (row) {
+    row.classList.toggle('done', !!checked[id]);
+    const mark = row.querySelector('.check-mark');
+    if (mark) mark.style.display = checked[id] ? 'block' : 'none';
+    const grpCount = row.closest('[data-group]');
+    if (grpCount) updateGroupCount(grpCount.dataset.group);
+  }
+  if (activeModal === id) {
+    const btn = document.getElementById('modal-mark-btn');
+    if (btn) {
+      btn.textContent = checked[id] ? '↩ Unmark recorded' : '✓ Mark as recorded';
+      btn.classList.toggle('marked', !!checked[id]);
+    }
+  }
+}
+
+function updateGroupCount(group) {
+  const el = document.getElementById('gcount-' + group.replace(/[^a-z0-9]/gi, '_'));
+  if (!el) return;
+  const exs = EXERCISES.filter(e => e.group === group);
+  const done = exs.filter(e => checked[e.id]).length;
+  el.textContent = `${done}/${exs.length} recorded`;
+}
+
+function updateStats() {
+  const filt = filtered();
+  const done = Object.values(checked).filter(Boolean).length;
+  const pct = Math.round(done / EXERCISES.length * 100);
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-left').textContent = EXERCISES.length - done;
+  document.getElementById('stat-pct').textContent = pct + '%';
+  document.getElementById('stat-showing').textContent = filt.length;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function openModal(id) {
+  activeModal = id;
+  const ex = EXERCISES.find(e => e.id === id);
+  if (!ex) return;
+  const url = ytUrl(ex.yt);
+  document.getElementById('modal-title').textContent = ex.name;
+  document.getElementById('modal-meta').innerHTML = `
+    <span class="modal-meta-item level-badge ${ex.level}">${ex.level}</span>
+    <span class="modal-meta-dot">·</span>
+    <span class="modal-meta-item">${ex.group}</span>
+    <span class="modal-meta-dot">·</span>
+    <span class="modal-meta-item">${ex.equipment}</span>
+    <span class="modal-meta-dot">·</span>
+    <span class="modal-meta-item">${ex.loc === 'Both' ? 'Home + Gym' : ex.loc}</span>
+  `;
+  document.getElementById('modal-thumb').src = `https://img.youtube.com/vi/${ex.yt}/mqdefault.jpg`;
+  document.getElementById('modal-thumb-link').href = url;
+  document.getElementById('modal-yt-link').href = url;
+  const btn = document.getElementById('modal-mark-btn');
+  btn.textContent = checked[id] ? '↩ Unmark recorded' : '✓ Mark as recorded';
+  btn.classList.toggle('marked', !!checked[id]);
+  document.getElementById('modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(event) {
+  if (event && event.target !== document.getElementById('modal')) return;
+  document.getElementById('modal').style.display = 'none';
+  document.body.style.overflow = '';
+  activeModal = null;
+}
+
+function markFromModal() {
+  if (activeModal) toggleCheck(activeModal);
+}
+
+function applyFilters() {
+  searchQ = document.getElementById('search').value.toLowerCase().trim();
+  renderContent();
+  updateStats();
+}
+
+function setGroup(g) {
+  activeGroup = g;
+  document.querySelectorAll('#group-pills .pill').forEach(p => p.classList.toggle('active', p.dataset.val === g));
+  applyFilters();
+}
+
+function setLevel(l) {
+  activeLevel = l;
+  document.querySelectorAll('#level-pills .pill').forEach(p => p.classList.toggle('active', p.dataset.val === l));
+  applyFilters();
+}
+
+function setLoc(l) {
+  activeLoc = l;
+  document.querySelectorAll('#loc-pills .pill').forEach(p => p.classList.toggle('active', p.dataset.val === l));
+  applyFilters();
+}
+
+function toggleUnchecked() {
+  uncheckedOnly = !uncheckedOnly;
+  document.getElementById('toggle-track').classList.toggle('on', uncheckedOnly);
+  applyFilters();
+}
+
+function renderPills() {
+  const gp = document.getElementById('group-pills');
+  gp.innerHTML = ['All', ...GROUPS].map(g => {
+    const label = g === 'All' ? 'All groups' : `${GE[g] || ''} ${g}`;
+    return `<button class="pill${g === activeGroup ? ' active' : ''}" data-val="${g}" onclick="setGroup('${g.replace(/'/g, "\\'")}')">${label}</button>`;
+  }).join('');
+
+  document.getElementById('level-pills').innerHTML = ['All','Beginner','Intermediate','Advanced'].map(l =>
+    `<button class="pill${l === activeLevel ? ' active' : ''}" data-val="${l}" onclick="setLevel('${l}')">${l === 'All' ? 'All levels' : l}</button>`
+  ).join('');
+
+  document.getElementById('loc-pills').innerHTML = ['All','Home','Gym'].map(l =>
+    `<button class="pill${l === activeLoc ? ' active' : ''}" data-val="${l}" onclick="setLoc('${l}')">${l === 'All' ? 'Home + Gym' : l}</button>`
+  ).join('');
+}
+
+function renderContent() {
+  const filt = filtered();
+  const byGroup = {};
+  filt.forEach(e => { if (!byGroup[e.group]) byGroup[e.group] = []; byGroup[e.group].push(e); });
+
+  if (Object.keys(byGroup).length === 0) {
+    document.getElementById('content').innerHTML = '<div class="empty-state">No exercises match your filters.</div>';
+    return;
+  }
+
+  document.getElementById('content').innerHTML = Object.entries(byGroup).map(([group, exs]) => {
+    const safeId = group.replace(/[^a-z0-9]/gi, '_');
+    const done = exs.filter(e => checked[e.id]).length;
+    const rows = exs.map(ex => {
+      const dn = !!checked[ex.id];
+      const li = ex.loc === 'Both' ? '🏠🏋️' : ex.loc === 'Home' ? '🏠' : '🏋️';
+      return `<div class="ex-row${dn ? ' done' : ''}" id="row-${ex.id}" onclick="toggleCheck(${ex.id}, event)">
+        <div class="checkbox"><span class="check-mark" style="display:${dn ? 'block' : 'none'}">✓</span></div>
+        <span class="ex-name">${ex.name}</span>
+        <span class="level-badge ${ex.level}">${ex.level}</span>
+        <span class="equip-tag">${ex.equipment}</span>
+        <span class="loc-icon">${li}</span>
+        <button class="watch-btn" onclick="event.stopPropagation();openModal(${ex.id})">▶ Watch</button>
+      </div>`;
+    }).join('');
+
+    return `<div data-group="${group}">
+      <div class="group-header">
+        <span class="group-emoji">${GE[group] || '💪'}</span>
+        <span class="group-name">${group}</span>
+        <span class="group-count" id="gcount-${safeId}">${done}/${exs.length} recorded</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+// Init
+renderPills();
+renderContent();
+updateStats();
+</script>
+</body>
+</html>
