@@ -1,0 +1,10 @@
+{
+  "name": "thickfit-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Thick Fit Coaching internal tools — exercise video production checklist",
+  "engines": {
+    "node": ">=20"
+  }
+}

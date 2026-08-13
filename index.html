@@ -90,14 +90,65 @@
   .btn-mark.marked { background: var(--green); color: var(--white); border-color: var(--green); }
   .empty-state { text-align: center; padding: 4rem 1rem; color: var(--gray-400); font-size: 14px; }
   .yt-note { font-size: 10px; color: var(--gray-400); text-align: center; margin-top: 8px; }
+
+  /* ── Sign-in gate ─────────────────────────────────────────────── */
+  .gate { position: fixed; inset: 0; background: var(--black); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
+  .gate-box { width: min(360px, 100%); text-align: center; }
+  .gate-title { color: var(--white); font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+  .gate-sub { color: var(--gray-400); font-size: 12px; margin: 6px 0 20px; line-height: 1.5; }
+  .gate-input { width: 100%; padding: 12px 14px; border-radius: 7px; border: 1.5px solid var(--gray-800); background: #141414; color: var(--white); font-size: 14px; font-family: inherit; text-align: center; }
+  .gate-input:focus { outline: none; border-color: var(--white); }
+  .gate-btn { width: 100%; margin-top: 10px; padding: 12px 16px; border-radius: 7px; border: none; background: var(--white); color: var(--black); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+  .gate-btn:disabled { opacity: 0.5; cursor: default; }
+  .gate-error { color: #ff6b6b; font-size: 12px; margin-top: 12px; min-height: 16px; }
+
+  /* ── Sync status + toasts ─────────────────────────────────────── */
+  .sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 6px; vertical-align: middle; }
+  .sync-dot.saving { background: #d98c00; }
+  .sync-dot.error { background: #cc2222; }
+  .sync-label { font-size: 10px; color: var(--gray-400); letter-spacing: 0.02em; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--black); color: var(--white); font-size: 12px; padding: 10px 16px; border-radius: 7px; z-index: 3000; max-width: min(420px, calc(100vw - 2rem)); text-align: center; line-height: 1.4; }
+  .toast.error { background: #cc2222; }
+
+  /* ── Video upload + playback ──────────────────────────────────── */
+  .video-block { border: 1.5px solid var(--gray-200); border-radius: 7px; padding: 12px; margin-bottom: 14px; }
+  .video-block-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-600); margin-bottom: 10px; }
+  .video-player { width: 100%; border-radius: 6px; background: var(--black); display: block; max-height: 300px; }
+  .video-filename { font-size: 11px; color: var(--gray-600); margin-top: 8px; word-break: break-all; }
+  .video-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-small { flex: 1; border-radius: 6px; padding: 8px 10px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; border: 1.5px solid var(--gray-200); background: var(--white); color: var(--black); transition: all 0.15s; }
+  .btn-small:hover:not(:disabled) { border-color: var(--black); }
+  .btn-small:disabled { opacity: 0.5; cursor: default; }
+  .btn-small.danger:hover:not(:disabled) { border-color: #cc2222; color: #cc2222; }
+  .btn-upload { display: block; width: 100%; border-radius: 6px; padding: 11px 14px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; border: 1.5px dashed var(--gray-400); background: var(--gray-50); color: var(--black); text-align: center; transition: all 0.15s; }
+  .btn-upload:hover { border-color: var(--black); background: var(--gray-100); }
+  .upload-progress-track { height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; margin-top: 10px; }
+  .upload-progress-fill { height: 100%; background: var(--green); width: 0%; transition: width 0.2s; }
+  .upload-status { font-size: 11px; color: var(--gray-600); margin-top: 8px; text-align: center; }
+  .video-flag { font-size: 11px; margin-left: 6px; flex-shrink: 0; }
 </style>
 </head>
 <body>
 <h2 class="sr-only">Thick Fit Coaching — Exercise Video Production Checklist</h2>
+
+<!-- Sign-in gate. Shown until a working password is stored. -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-title">THICK FIT COACHING</div>
+    <div class="gate-sub">Exercise Video Production Checklist<br>Enter the team password to continue.</div>
+    <form onsubmit="submitPassword(event)">
+      <input class="gate-input" id="gate-input" type="password" placeholder="Password" autocomplete="current-password" autofocus>
+      <button class="gate-btn" id="gate-btn" type="submit">Unlock</button>
+    </form>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-inner">
     <div class="header-title">THICK FIT COACHING</div>
-    <div class="header-sub">Exercise Video Production Checklist · Watch reference → Record your own → Check it off</div>
+    <div class="header-sub">Exercise Video Production Checklist · Watch reference → Record your own → Upload it</div>
+    <div style="margin-top:6px"><span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">Saved to Supabase</span></div>
   </div>
 </div>
 <div class="stats-bar">
@@ -143,8 +194,15 @@
     </div>
     <div class="modal-body">
       <div class="modal-meta" id="modal-meta"></div>
+
+      <!-- Your recorded demo: player when one exists, upload prompt when it doesn't. -->
+      <div class="video-block">
+        <div class="video-block-head">Your demo video</div>
+        <div id="modal-video"></div>
+      </div>
+
       <div class="hint-box">
-        <strong>How to use:</strong> Click the button below — YouTube opens showing demos for this exact exercise. Watch a reference video, then come back and record your own version. Check it off when done.
+        <strong>How to use:</strong> Search YouTube for a reference, record your own version, then upload it here. Uploading ticks the box automatically. Max 50&nbsp;MB per video.
       </div>
       <div class="modal-actions">
         <a class="btn-yt" id="modal-yt-link" href="#" target="_blank" rel="noopener noreferrer">
@@ -156,6 +214,10 @@
     </div>
   </div>
 </div>
+
+<!-- Lives outside the modal so re-rendering the video block can't destroy it mid-pick. -->
+<input type="file" id="file-input" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,video/x-matroska"
+       style="display:none" onchange="onFilePicked(this)">
 
 <script>
 const EXERCISES = [
@@ -488,11 +550,151 @@ const GE = {"Glutes":"🍑","Hamstrings":"🦵","Quadriceps":"🦵","Inner Thigh
 const GROUPS = [...new Set(EXERCISES.map(e => e.group))];
 const TOTAL = EXERCISES.length;
 
-let checked = {};
-try { checked = JSON.parse(localStorage.getItem('tf_checked') || '{}'); } catch(e) {}
 let activeGroup = 'All', activeLevel = 'All', activeLoc = 'All', searchQ = '', uncheckedOnly = false, activeModal = null;
 
-function save() { try { localStorage.setItem('tf_checked', JSON.stringify(checked)); } catch(e) {} }
+/* ── Server-backed state ────────────────────────────────────────────
+   Checkoffs and uploads live in Supabase (public.video_checklist), so
+   they survive a refresh and follow her to any device. `state` mirrors
+   that table, keyed by the checklist ids in EXERCISES above. */
+const KEY_STORAGE = 'tf_key';
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+let apiKey = '';
+let state = {};
+let uploading = false;
+
+const isDone = id => !!(state[id] && state[id].is_recorded);
+const hasVideo = id => !!(state[id] && state[id].video_path);
+
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function api(path, options = {}) {
+  const response = await fetch('/api' + path, {
+    ...options,
+    headers: { 'content-type': 'application/json', 'x-tf-key': apiKey, ...(options.headers || {}) },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw Object.assign(new Error(data.error || 'Request failed.'), { status: response.status });
+  }
+  return data;
+}
+
+function setSync(kind, text) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + kind;
+  document.getElementById('sync-label').textContent = text;
+}
+
+let toastTimer;
+function toast(message, isError) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = message;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 5000);
+}
+
+/* A 401 means the stored password stopped working — send her back to the gate. */
+function handleApiError(error, fallback) {
+  if (error.status === 401) {
+    localStorage.removeItem(KEY_STORAGE);
+    apiKey = '';
+    document.getElementById('gate').style.display = 'flex';
+    document.getElementById('gate-error').textContent = 'Session expired — please sign in again.';
+    return;
+  }
+  setSync('error', 'Not saved');
+  toast(fallback + ' ' + error.message, true);
+}
+
+/* ── Sign-in gate ─────────────────────────────────────────────────── */
+async function submitPassword(event) {
+  event.preventDefault();
+  const input = document.getElementById('gate-input');
+  const button = document.getElementById('gate-btn');
+  const error = document.getElementById('gate-error');
+  const candidate = input.value;
+  if (!candidate) return;
+
+  button.disabled = true;
+  button.textContent = 'Checking…';
+  error.textContent = '';
+  apiKey = candidate;
+  try {
+    await loadChecklist();
+    localStorage.setItem(KEY_STORAGE, candidate);
+    document.getElementById('gate').style.display = 'none';
+    input.value = '';
+    await migrateLegacyCheckoffs();
+  } catch (loadError) {
+    apiKey = '';
+    error.textContent = loadError.status === 401 ? 'Wrong password.' : loadError.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Unlock';
+  }
+}
+
+function applyItems(items) {
+  state = {};
+  items.forEach(item => { state[item.checklist_id] = item; });
+  renderPills();
+  renderContent();
+  updateStats();
+}
+
+async function loadChecklist() {
+  setSync('saving', 'Loading…');
+  const { items } = await api('/checklist');
+  applyItems(items);
+  setSync('', 'Saved to Supabase');
+}
+
+/* Before Supabase, checkoffs lived in this browser's localStorage. Offer to
+   carry them over once, so nobody's earlier progress silently disappears. */
+const LEGACY_KEY = 'tf_checked';
+const MIGRATED_FLAG = 'tf_migrated';
+
+function legacyCheckoffs() {
+  if (localStorage.getItem(MIGRATED_FLAG)) return [];
+  let stored;
+  try { stored = JSON.parse(localStorage.getItem(LEGACY_KEY) || '{}'); } catch (e) { return []; }
+  return Object.keys(stored)
+    .filter(key => stored[key])
+    .map(Number)
+    .filter(Number.isInteger);
+}
+
+async function migrateLegacyCheckoffs() {
+  const ids = legacyCheckoffs();
+  if (!ids.length) return;
+
+  const fresh = ids.filter(id => !isDone(id));
+  if (!fresh.length) {                       // already in Supabase — just stop asking
+    localStorage.setItem(MIGRATED_FLAG, '1');
+    return;
+  }
+
+  const message = fresh.length + ' checkoff' + (fresh.length === 1 ? '' : 's') +
+    ' from this browser aren\'t saved to your account yet.\n\nImport them now?';
+  if (!confirm(message)) return;             // ask again next time rather than lose them
+
+  setSync('saving', 'Importing…');
+  try {
+    const { imported, items } = await api('/checklist', {
+      method: 'POST',
+      body: JSON.stringify({ recorded_ids: ids }),
+    });
+    applyItems(items);
+    localStorage.setItem(MIGRATED_FLAG, '1');
+    setSync('', 'Saved to Supabase');
+    toast('Imported ' + imported + ' checkoff' + (imported === 1 ? '' : 's') + ' from this browser.');
+  } catch (error) {
+    handleApiError(error, 'Could not import your old checkoffs.');
+  }
+}
 
 function filtered() {
   return EXERCISES.filter(e => {
@@ -500,28 +702,58 @@ function filtered() {
     if (activeLevel !== 'All' && e.level !== activeLevel) return false;
     if (activeLoc === 'Home' && e.loc === 'Gym') return false;
     if (activeLoc === 'Gym' && e.loc === 'Both') return false;
-    if (uncheckedOnly && checked[e.id]) return false;
+    if (uncheckedOnly && isDone(e.id)) return false;
     if (searchQ && !e.name.toLowerCase().includes(searchQ) && !e.group.toLowerCase().includes(searchQ)) return false;
     return true;
   });
 }
 
-function toggleCheck(id, event) {
-  if (event) event.stopPropagation();
-  checked[id] = !checked[id];
-  save();
+/* Repaint one row in place rather than re-rendering the whole list. */
+function paintRow(id) {
   const row = document.getElementById('row-' + id);
   if (row) {
-    row.classList.toggle('done', !!checked[id]);
+    row.classList.toggle('done', isDone(id));
     const mark = row.querySelector('.check-mark');
-    if (mark) mark.style.display = checked[id] ? 'block' : 'none';
-    const grp = row.closest('[data-group]');
-    if (grp) updateGroupCount(grp.dataset.group);
+    if (mark) mark.style.display = isDone(id) ? 'block' : 'none';
+    const flag = row.querySelector('.video-flag');
+    if (flag) flag.textContent = hasVideo(id) ? '🎬' : '';
+    const group = row.closest('[data-group]');
+    if (group) updateGroupCount(group.dataset.group);
   }
+  if (activeModal === id) updateModalButton(id);
+}
+
+function updateModalButton(id) {
+  const button = document.getElementById('modal-mark-btn');
+  if (!button) return;
+  button.textContent = isDone(id) ? '↩ Unmark recorded' : '✓ Mark as recorded';
+  button.classList.toggle('marked', isDone(id));
+}
+
+async function toggleCheck(id, event) {
+  if (event) event.stopPropagation();
+  const previous = state[id];
+  const next = !isDone(id);
+
+  // Optimistic: tick immediately, roll back if Supabase rejects it.
+  state[id] = { ...previous, is_recorded: next };
+  paintRow(id);
   updateStats();
-  if (activeModal === id) {
-    const btn = document.getElementById('modal-mark-btn');
-    if (btn) { btn.textContent = checked[id] ? '↩ Unmark recorded' : '✓ Mark as recorded'; btn.classList.toggle('marked', !!checked[id]); }
+  setSync('saving', 'Saving…');
+
+  try {
+    const { item } = await api('/checklist', {
+      method: 'PATCH',
+      body: JSON.stringify({ checklist_id: id, is_recorded: next }),
+    });
+    state[id] = item;
+    paintRow(id);
+    setSync('', 'Saved to Supabase');
+  } catch (error) {
+    state[id] = previous;
+    paintRow(id);
+    updateStats();
+    handleApiError(error, 'Could not save that checkoff.');
   }
 }
 
@@ -529,12 +761,12 @@ function updateGroupCount(group) {
   const el = document.getElementById('gcount-' + group.replace(/[^a-z0-9]/gi,'_'));
   if (!el) return;
   const exs = EXERCISES.filter(e => e.group === group);
-  el.textContent = exs.filter(e => checked[e.id]).length + '/' + exs.length + ' recorded';
+  el.textContent = exs.filter(e => isDone(e.id)).length + '/' + exs.length + ' recorded';
 }
 
 function updateStats() {
   const filt = filtered();
-  const done = Object.values(checked).filter(Boolean).length;
+  const done = EXERCISES.filter(e => isDone(e.id)).length;
   const pct = Math.round(done / TOTAL * 100);
   document.getElementById('stat-done').textContent = done;
   document.getElementById('stat-left').textContent = TOTAL - done;
@@ -554,21 +786,144 @@ function openModal(id) {
     '<span class="modal-meta-dot">·</span><span class="modal-meta-item">' + ex.equipment + '</span>' +
     '<span class="modal-meta-dot">·</span><span class="modal-meta-item">' + (ex.loc === 'Both' ? 'Home + Gym' : ex.loc) + '</span>';
   document.getElementById('modal-yt-link').href = ytSearchUrl(ex.name);
-  const btn = document.getElementById('modal-mark-btn');
-  btn.textContent = checked[id] ? '↩ Unmark recorded' : '✓ Mark as recorded';
-  btn.classList.toggle('marked', !!checked[id]);
+  updateModalButton(id);
   document.getElementById('modal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  renderVideoBlock(id);
 }
 
 function closeModal(event) {
   if (event && event.target !== document.getElementById('modal')) return;
+  if (uploading) { toast('Upload in progress — hang on a moment.'); return; }
   document.getElementById('modal').style.display = 'none';
   document.body.style.overflow = '';
   activeModal = null;
 }
 
 function markFromModal() { if (activeModal) toggleCheck(activeModal); }
+
+/* ── Demo video: playback, upload, removal ────────────────────────── */
+async function renderVideoBlock(id) {
+  const box = document.getElementById('modal-video');
+  if (!hasVideo(id)) {
+    box.innerHTML =
+      '<button class="btn-upload" onclick="pickVideo()">⬆&nbsp; Upload your recording</button>' +
+      '<div class="upload-status" id="upload-status"></div>';
+    return;
+  }
+
+  box.innerHTML = '<div class="upload-status">Loading video…</div>';
+  try {
+    // The bucket is private, so playback runs off a short-lived signed link.
+    const { url } = await api('/video?checklist_id=' + id);
+    if (activeModal !== id) return;
+    const row = state[id];
+    box.innerHTML =
+      '<video class="video-player" controls preload="metadata" src="' + escapeHtml(url) + '"></video>' +
+      (row.video_filename ? '<div class="video-filename">' + escapeHtml(row.video_filename) + '</div>' : '') +
+      '<div class="video-row">' +
+        '<button class="btn-small" onclick="pickVideo()">Replace</button>' +
+        '<button class="btn-small danger" onclick="removeVideo()">Remove</button>' +
+      '</div>' +
+      '<div class="upload-status" id="upload-status"></div>';
+  } catch (error) {
+    if (activeModal !== id) return;
+    box.innerHTML = '<div class="upload-status">Could not load video: ' + escapeHtml(error.message) + '</div>';
+  }
+}
+
+function pickVideo() {
+  if (uploading) return;
+  document.getElementById('file-input').click();
+}
+
+/* Uploads go browser → Supabase Storage directly via a signed URL.
+   Routing them through the serverless function would hit its body limit. */
+function putWithProgress(url, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('PUT', url);
+    if (file.type) request.setRequestHeader('content-type', file.type);
+    request.upload.onprogress = event => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    request.onload = () => (request.status >= 200 && request.status < 300)
+      ? resolve()
+      : reject(new Error('Upload rejected (' + request.status + ').'));
+    request.onerror = () => reject(new Error('Upload failed — check your connection.'));
+    request.send(file);
+  });
+}
+
+async function onFilePicked(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file || activeModal === null || uploading) return;
+
+  const id = activeModal;
+  if (file.size > MAX_UPLOAD_BYTES) {
+    toast('That file is ' + (file.size / 1048576).toFixed(0) + ' MB. The limit is 50 MB.', true);
+    return;
+  }
+
+  uploading = true;
+  const box = document.getElementById('modal-video');
+  box.innerHTML =
+    '<div class="upload-progress-track"><div class="upload-progress-fill" id="upload-fill"></div></div>' +
+    '<div class="upload-status" id="upload-status">Preparing upload…</div>';
+  const status = () => document.getElementById('upload-status');
+  const fill = () => document.getElementById('upload-fill');
+  setSync('saving', 'Uploading…');
+
+  try {
+    const { path, uploadUrl } = await api('/upload', {
+      method: 'POST',
+      body: JSON.stringify({
+        checklist_id: id, filename: file.name, contentType: file.type, size: file.size,
+      }),
+    });
+
+    await putWithProgress(uploadUrl, file, percent => {
+      if (fill()) fill().style.width = percent + '%';
+      if (status()) status().textContent = 'Uploading… ' + percent + '%';
+    });
+
+    if (status()) status().textContent = 'Saving…';
+    const { item } = await api('/upload', {
+      method: 'PATCH',
+      body: JSON.stringify({ checklist_id: id, path, filename: file.name }),
+    });
+
+    state[id] = item;
+    uploading = false;
+    paintRow(id);
+    updateStats();
+    setSync('', 'Saved to Supabase');
+    toast('Video uploaded — ticked off automatically.');
+    if (activeModal === id) renderVideoBlock(id);
+  } catch (error) {
+    uploading = false;
+    if (activeModal === id) renderVideoBlock(id);
+    handleApiError(error, 'Upload failed.');
+  }
+}
+
+async function removeVideo() {
+  if (activeModal === null || uploading) return;
+  const id = activeModal;
+  if (!confirm('Remove this video? The checkoff stays ticked.')) return;
+
+  setSync('saving', 'Removing…');
+  try {
+    const { item } = await api('/upload?checklist_id=' + id, { method: 'DELETE' });
+    state[id] = item;
+    paintRow(id);
+    setSync('', 'Saved to Supabase');
+    if (activeModal === id) renderVideoBlock(id);
+  } catch (error) {
+    handleApiError(error, 'Could not remove that video.');
+  }
+}
 
 function applyFilters() {
   searchQ = document.getElementById('search').value.toLowerCase().trim();
@@ -605,15 +960,16 @@ function renderContent() {
   if (!Object.keys(byGroup).length) { document.getElementById('content').innerHTML = '<div class="empty-state">No exercises match your filters.</div>'; return; }
   document.getElementById('content').innerHTML = Object.entries(byGroup).map(([group, exs]) => {
     const sid = group.replace(/[^a-z0-9]/gi,'_');
-    const gdone = exs.filter(e => checked[e.id]).length;
+    const gdone = exs.filter(e => isDone(e.id)).length;
     return '<div data-group="' + group + '">' +
       '<div class="group-header"><span class="group-emoji">' + (GE[group]||'💪') + '</span><span class="group-name">' + group + '</span><span class="group-count" id="gcount-' + sid + '">' + gdone + '/' + exs.length + ' recorded</span></div>' +
       exs.map(ex => {
-        const dn = !!checked[ex.id];
+        const dn = isDone(ex.id);
         const li = ex.loc === 'Both' ? '🏠🏋️' : ex.loc === 'Home' ? '🏠' : '🏋️';
         return '<div class="ex-row' + (dn?' done':'') + '" id="row-' + ex.id + '" onclick="toggleCheck(' + ex.id + ',event)">' +
           '<div class="checkbox"><span class="check-mark" style="display:' + (dn?'block':'none') + '">✓</span></div>' +
           '<span class="ex-name">' + ex.name + '</span>' +
+          '<span class="video-flag" title="Demo video uploaded">' + (hasVideo(ex.id) ? '🎬' : '') + '</span>' +
           '<span class="level-badge ' + ex.level + '">' + ex.level + '</span>' +
           '<span class="equip-tag">' + ex.equipment + '</span>' +
           '<span class="loc-icon">' + li + '</span>' +
@@ -623,9 +979,29 @@ function renderContent() {
   }).join('');
 }
 
+/* ── Boot ─────────────────────────────────────────────────────────── */
 renderPills();
 renderContent();
 updateStats();
+
+(async function start() {
+  const stored = localStorage.getItem(KEY_STORAGE);
+  if (!stored) return;                       // gate stays up
+  apiKey = stored;
+  try {
+    await loadChecklist();
+    document.getElementById('gate').style.display = 'none';
+    await migrateLegacyCheckoffs();
+  } catch (error) {
+    apiKey = '';
+    if (error.status === 401) {
+      localStorage.removeItem(KEY_STORAGE);
+      document.getElementById('gate-error').textContent = 'Password changed — please sign in again.';
+    } else {
+      document.getElementById('gate-error').textContent = error.message;
+    }
+  }
+})();
 </script>
 </body>
 </html>

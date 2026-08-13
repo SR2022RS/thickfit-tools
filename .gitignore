@@ -1,0 +1,15 @@
+# Environment variables — never commit real keys
+.env
+.env.local
+.env.*.local
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Vercel
+.vercel
+
+# Node
+node_modules/
