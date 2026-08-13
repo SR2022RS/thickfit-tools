@@ -7,7 +7,7 @@ export const TABLE = 'video_checklist';
 export const PUBLIC_COLUMNS = [
   'checklist_id', 'name', 'muscle_group', 'level', 'equipment', 'location',
   'is_recorded', 'recorded_at', 'video_path', 'video_filename',
-  'video_uploaded_at', 'note', 'updated_at',
+  'video_uploaded_at', 'note', 'is_custom', 'updated_at',
 ].join(',');
 
 function env(name) {

@@ -132,6 +132,27 @@
   .upload-progress-fill { height: 100%; background: var(--green); width: 0%; transition: width 0.2s; }
   .upload-status { font-size: 11px; color: var(--gray-600); margin-top: 8px; text-align: center; }
   .video-flag { font-size: 11px; margin-left: 6px; flex-shrink: 0; }
+
+  /* ── Adding and editing her own exercises ─────────────────────── */
+  .add-btn { background: var(--black); color: var(--white); border: none; border-radius: 6px; padding: 9px 14px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; flex-shrink: 0; transition: background 0.15s; }
+  .add-btn:hover { background: var(--gray-800); }
+  .edit-btn { background: none; border: none; font-size: 12px; cursor: pointer; padding: 4px 6px; border-radius: 4px; flex-shrink: 0; opacity: 0.5; transition: opacity 0.15s, background 0.15s; }
+  .edit-btn:hover { opacity: 1; background: var(--gray-100); }
+  .custom-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-400); border: 1px solid var(--gray-200); border-radius: 20px; padding: 1px 7px; flex-shrink: 0; }
+  .form-field { margin-bottom: 12px; }
+  .form-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-600); margin-bottom: 5px; }
+  .form-input, .form-select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--gray-200); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--white); color: var(--black); outline: none; }
+  .form-input:focus, .form-select:focus { border-color: var(--black); }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+  .form-error { color: #cc2222; font-size: 12px; min-height: 16px; margin-bottom: 8px; }
+  .form-actions { display: flex; gap: 8px; }
+  .btn-primary { flex: 1; border-radius: 7px; padding: 11px 16px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; background: var(--black); color: var(--white); }
+  .btn-primary:disabled { opacity: 0.5; cursor: default; }
+  .btn-secondary { border-radius: 7px; padding: 11px 16px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; border: 1.5px solid var(--gray-200); background: var(--white); color: var(--black); }
+  .btn-secondary:hover { border-color: var(--black); }
+  .btn-secondary.danger { color: #cc2222; }
+  .btn-secondary.danger:hover { border-color: #cc2222; }
 </style>
 </head>
 <body>
@@ -177,6 +198,7 @@
       <div class="toggle-track" id="toggle-track"><div class="toggle-knob"></div></div>
       <span class="toggle-label">Unrecorded only</span>
     </div>
+    <button class="add-btn" onclick="openExerciseForm()">+ Add exercise</button>
   </div>
   <div class="filter-row">
     <span class="filter-label">Muscle</span>
@@ -221,330 +243,64 @@
   </div>
 </div>
 
+<!-- Add / edit an exercise of her own -->
+<div class="modal-overlay" id="form-modal" style="display:none" onclick="closeExerciseForm(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="form-title">Add an exercise</div>
+      <button class="modal-close" onclick="closeExerciseForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="submitExerciseForm(event)">
+        <div class="form-field">
+          <label class="form-label" for="form-name">Exercise name</label>
+          <input class="form-input" id="form-name" placeholder="e.g. Banded Hip Airplane" autocomplete="off" required>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="form-group">Muscle group</label>
+          <select class="form-select" id="form-group" onchange="toggleNewGroupField()"></select>
+        </div>
+        <div class="form-field" id="form-newgroup-field" style="display:none">
+          <label class="form-label" for="form-newgroup">New muscle group name</label>
+          <input class="form-input" id="form-newgroup" placeholder="e.g. Neck" autocomplete="off">
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="form-level">Level</label>
+            <select class="form-select" id="form-level">
+              <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="form-loc">Where</label>
+            <select class="form-select" id="form-loc">
+              <option value="Both">Home + Gym</option><option value="Home">Home</option><option value="Gym">Gym</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="form-equipment">Equipment</label>
+          <input class="form-input" id="form-equipment" placeholder="e.g. Resistance band" autocomplete="off">
+        </div>
+        <div class="form-error" id="form-error"></div>
+        <div class="form-actions">
+          <button class="btn-secondary danger" type="button" id="form-delete" style="display:none" onclick="deleteExercise()">Delete</button>
+          <button class="btn-primary" type="submit" id="form-submit">Add exercise</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Lives outside the modal so re-rendering the video block can't destroy it mid-pick. -->
 <input type="file" id="file-input" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,video/x-matroska"
        style="display:none" onchange="onFilePicked(this)">
 
 <script>
-const EXERCISES = [
-  // ── GLUTES ──────────────────────────────────────────────────────
-  {id:1,group:"Glutes",name:"Bodyweight Glute Bridge",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:2,group:"Glutes",name:"Bodyweight Hip Thrust",level:"Beginner",equipment:"Bench / Chair",loc:"Both"},
-  {id:3,group:"Glutes",name:"Clamshells",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:4,group:"Glutes",name:"Donkey Kicks",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:5,group:"Glutes",name:"Fire Hydrants",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:6,group:"Glutes",name:"Standing Glute Kickback",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:7,group:"Glutes",name:"Resistance Band Glute Bridge",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:8,group:"Glutes",name:"Frog Pumps",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:9,group:"Glutes",name:"Resistance Band Clamshell",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:10,group:"Glutes",name:"Glute Kickback (Resistance Band)",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:11,group:"Glutes",name:"Single-Leg Glute Bridge",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:12,group:"Glutes",name:"Dumbbell Hip Thrust (Floor)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:13,group:"Glutes",name:"Dumbbell Hip Thrust (Bench)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:14,group:"Glutes",name:"Resistance Band Hip Thrust",level:"Intermediate",equipment:"Resistance Band + Bench",loc:"Both"},
-  {id:15,group:"Glutes",name:"Sumo Squat to Pulse",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:16,group:"Glutes",name:"Weighted Frog Pumps",level:"Intermediate",equipment:"Plate / Dumbbell",loc:"Both"},
-  {id:17,group:"Glutes",name:"Kneeling Squat",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:18,group:"Glutes",name:"Cable Kickback",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:19,group:"Glutes",name:"Cable Hip Abduction",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:20,group:"Glutes",name:"Smith Machine Hip Thrust",level:"Intermediate",equipment:"Smith Machine",loc:"Gym"},
-  {id:21,group:"Glutes",name:"Hip Abduction Machine",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:22,group:"Glutes",name:"Romanian Deadlift (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:23,group:"Glutes",name:"45° Back Extension (Glute Focus)",level:"Intermediate",equipment:"Hyperextension Bench",loc:"Gym"},
-  {id:24,group:"Glutes",name:"Barbell Hip Thrust",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym"},
-  {id:25,group:"Glutes",name:"Barbell Glute Bridge",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:26,group:"Glutes",name:"Single-Leg Hip Thrust (Barbell)",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym"},
-  {id:27,group:"Glutes",name:"Banded Barbell Hip Thrust",level:"Advanced",equipment:"Barbell + Band",loc:"Gym"},
-  {id:28,group:"Glutes",name:"Romanian Deadlift (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:29,group:"Glutes",name:"Single-Leg Romanian Deadlift",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  {id:30,group:"Glutes",name:"Weighted Donkey Kicks (Cable)",level:"Advanced",equipment:"Cable Machine",loc:"Gym"},
-  // ── HAMSTRINGS ──────────────────────────────────────────────────
-  {id:31,group:"Hamstrings",name:"Good Mornings (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:32,group:"Hamstrings",name:"Resistance Band Hamstring Curl",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:33,group:"Hamstrings",name:"Lying Leg Curl Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:34,group:"Hamstrings",name:"Stability Ball Hamstring Curl",level:"Intermediate",equipment:"Stability Ball",loc:"Both"},
-  {id:35,group:"Hamstrings",name:"Dumbbell Romanian Deadlift",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:36,group:"Hamstrings",name:"Seated Leg Curl Machine",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:37,group:"Hamstrings",name:"Standing Leg Curl Machine",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:38,group:"Hamstrings",name:"Cable Pull-Through",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:39,group:"Hamstrings",name:"Single-Leg Dumbbell RDL",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  {id:40,group:"Hamstrings",name:"Barbell Romanian Deadlift",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:41,group:"Hamstrings",name:"Good Mornings (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:42,group:"Hamstrings",name:"Nordic Hamstring Curl",level:"Advanced",equipment:"Partner / GHD",loc:"Both"},
-  {id:43,group:"Hamstrings",name:"Glute-Ham Raise",level:"Advanced",equipment:"GHD Machine",loc:"Gym"},
-  {id:44,group:"Hamstrings",name:"Sumo Deadlift",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:45,group:"Hamstrings",name:"Hex Bar Deadlift",level:"Intermediate",equipment:"Hex Bar",loc:"Gym"},
-  // ── QUADRICEPS ──────────────────────────────────────────────────
-  {id:46,group:"Quadriceps",name:"Bodyweight Squat",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:47,group:"Quadriceps",name:"Wall Sit",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:48,group:"Quadriceps",name:"Sumo Squat",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:49,group:"Quadriceps",name:"Reverse Lunge (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:50,group:"Quadriceps",name:"Forward Lunge (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:51,group:"Quadriceps",name:"Step-Up (Bodyweight)",level:"Beginner",equipment:"Box / Step",loc:"Both"},
-  {id:52,group:"Quadriceps",name:"Goblet Squat",level:"Beginner",equipment:"Dumbbell / Kettlebell",loc:"Both"},
-  {id:53,group:"Quadriceps",name:"Leg Extension Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:54,group:"Quadriceps",name:"Dumbbell Lunge",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:55,group:"Quadriceps",name:"Walking Lunge",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:56,group:"Quadriceps",name:"Curtsy Lunge",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:57,group:"Quadriceps",name:"Bulgarian Split Squat (Bodyweight)",level:"Intermediate",equipment:"Bench",loc:"Both"},
-  {id:58,group:"Quadriceps",name:"Dumbbell Step-Up",level:"Intermediate",equipment:"Dumbbell + Box",loc:"Both"},
-  {id:59,group:"Quadriceps",name:"Jump Squat",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:60,group:"Quadriceps",name:"Leg Press",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:61,group:"Quadriceps",name:"Narrow Stance Leg Press",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:62,group:"Quadriceps",name:"Smith Machine Squat",level:"Intermediate",equipment:"Smith Machine",loc:"Gym"},
-  {id:63,group:"Quadriceps",name:"Hack Squat Machine",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:64,group:"Quadriceps",name:"Landmine Squat",level:"Intermediate",equipment:"Barbell + Landmine",loc:"Gym"},
-  {id:65,group:"Quadriceps",name:"Bulgarian Split Squat (Dumbbell)",level:"Advanced",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:66,group:"Quadriceps",name:"Barbell Back Squat",level:"Advanced",equipment:"Barbell + Rack",loc:"Gym"},
-  {id:67,group:"Quadriceps",name:"Barbell Front Squat",level:"Advanced",equipment:"Barbell + Rack",loc:"Gym"},
-  {id:68,group:"Quadriceps",name:"Sissy Squat",level:"Advanced",equipment:"None",loc:"Both"},
-  // ── INNER THIGHS ────────────────────────────────────────────────
-  {id:69,group:"Inner Thighs",name:"Sumo Squat (Wide Stance)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:70,group:"Inner Thighs",name:"Plié Squat Pulse",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:71,group:"Inner Thighs",name:"Resistance Band Adduction",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:72,group:"Inner Thighs",name:"Side Lunge",level:"Beginner",equipment:"Bodyweight",loc:"Both"},
-  {id:73,group:"Inner Thighs",name:"Adductor Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:74,group:"Inner Thighs",name:"Side Lunge with Dumbbell",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:75,group:"Inner Thighs",name:"Cossack Squat",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:76,group:"Inner Thighs",name:"Cable Adduction",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:77,group:"Inner Thighs",name:"Copenhagen Plank",level:"Advanced",equipment:"Bench",loc:"Both"},
-  {id:78,group:"Inner Thighs",name:"Lateral Band Walk",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  // ── CALVES ──────────────────────────────────────────────────────
-  {id:79,group:"Calves",name:"Standing Calf Raise (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:80,group:"Calves",name:"Seated Dumbbell Calf Raise",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:81,group:"Calves",name:"Jump Rope",level:"Beginner",equipment:"Jump Rope",loc:"Both"},
-  {id:82,group:"Calves",name:"Seated Calf Raise Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:83,group:"Calves",name:"Single-Leg Calf Raise",level:"Intermediate",equipment:"Step",loc:"Both"},
-  {id:84,group:"Calves",name:"Dumbbell Standing Calf Raise",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:85,group:"Calves",name:"Standing Calf Raise Machine",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:86,group:"Calves",name:"Leg Press Calf Raise",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:87,group:"Calves",name:"Barbell Standing Calf Raise",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:88,group:"Calves",name:"Donkey Calf Raise",level:"Advanced",equipment:"Machine",loc:"Gym"},
-  // ── CORE – ABS ──────────────────────────────────────────────────
-  {id:89,group:"Core – Abs",name:"Dead Bug",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:90,group:"Core – Abs",name:"Bent-Knee Crunch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:91,group:"Core – Abs",name:"Reverse Crunch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:92,group:"Core – Abs",name:"Bicycle Crunch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:93,group:"Core – Abs",name:"Toe Taps",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:94,group:"Core – Abs",name:"Flutter Kicks",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:95,group:"Core – Abs",name:"Scissor Kicks",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:96,group:"Core – Abs",name:"Mountain Climbers",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:97,group:"Core – Abs",name:"Leg Raise (Lying)",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:98,group:"Core – Abs",name:"Hollow Body Hold",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:99,group:"Core – Abs",name:"V-Up",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:100,group:"Core – Abs",name:"Russian Twist",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:101,group:"Core – Abs",name:"Weighted Russian Twist",level:"Intermediate",equipment:"Dumbbell / Plate",loc:"Both"},
-  {id:102,group:"Core – Abs",name:"Hanging Knee Raise",level:"Intermediate",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:103,group:"Core – Abs",name:"Cable Crunch",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:104,group:"Core – Abs",name:"Decline Sit-Up",level:"Intermediate",equipment:"Decline Bench",loc:"Gym"},
-  {id:105,group:"Core – Abs",name:"Hanging Leg Raise",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:106,group:"Core – Abs",name:"Ab Rollout",level:"Advanced",equipment:"Ab Wheel",loc:"Both"},
-  {id:107,group:"Core – Abs",name:"Dragon Flag",level:"Advanced",equipment:"Bench",loc:"Both"},
-  {id:108,group:"Core – Abs",name:"Toes-to-Bar",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:109,group:"Core – Abs",name:"Weighted Crunch",level:"Intermediate",equipment:"Plate / Dumbbell",loc:"Both"},
-  // ── CORE – OBLIQUES ─────────────────────────────────────────────
-  {id:110,group:"Core – Obliques",name:"Side Crunch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:111,group:"Core – Obliques",name:"Side Plank",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:112,group:"Core – Obliques",name:"Side Plank Hip Dip",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:113,group:"Core – Obliques",name:"Pallof Press",level:"Intermediate",equipment:"Cable / Band",loc:"Both"},
-  {id:114,group:"Core – Obliques",name:"Woodchop (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:115,group:"Core – Obliques",name:"Woodchop (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:116,group:"Core – Obliques",name:"Suitcase Carry",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:117,group:"Core – Obliques",name:"Starfish Crunch",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:118,group:"Core – Obliques",name:"Oblique V-Up",level:"Advanced",equipment:"None",loc:"Both"},
-  {id:119,group:"Core – Obliques",name:"Landmine Oblique Twist",level:"Advanced",equipment:"Barbell + Landmine",loc:"Gym"},
-  // ── CORE – LOWER BACK ───────────────────────────────────────────
-  {id:120,group:"Core – Lower Back",name:"Superman Hold",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:121,group:"Core – Lower Back",name:"Bird Dog",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:122,group:"Core – Lower Back",name:"Good Mornings (Bodyweight)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:123,group:"Core – Lower Back",name:"Back Extension (Bodyweight)",level:"Beginner",equipment:"Hyperextension Bench",loc:"Gym"},
-  {id:124,group:"Core – Lower Back",name:"Dumbbell Deadlift",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:125,group:"Core – Lower Back",name:"Back Extension (Weighted)",level:"Intermediate",equipment:"Hyperextension + Plate",loc:"Gym"},
-  {id:126,group:"Core – Lower Back",name:"Reverse Hyper",level:"Advanced",equipment:"Reverse Hyper Machine",loc:"Gym"},
-  {id:127,group:"Core – Lower Back",name:"Conventional Deadlift",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:128,group:"Core – Lower Back",name:"Good Mornings (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  // ── CORE – STABILITY ────────────────────────────────────────────
-  {id:129,group:"Core – Stability",name:"Forearm Plank",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:130,group:"Core – Stability",name:"High Plank",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:131,group:"Core – Stability",name:"Plank with Shoulder Tap",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:132,group:"Core – Stability",name:"Plank with Hip Dip",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:133,group:"Core – Stability",name:"Farmer's Carry",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:134,group:"Core – Stability",name:"Single-Arm Carry",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:135,group:"Core – Stability",name:"Bear Crawl",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:136,group:"Core – Stability",name:"Stir the Pot (Stability Ball)",level:"Advanced",equipment:"Stability Ball",loc:"Both"},
-  {id:137,group:"Core – Stability",name:"Ab Wheel Plank Roll-Out",level:"Advanced",equipment:"Ab Wheel",loc:"Both"},
-  {id:138,group:"Core – Stability",name:"TRX Plank",level:"Intermediate",equipment:"TRX / Suspension",loc:"Both"},
-  // ── BACK – UPPER ────────────────────────────────────────────────
-  {id:139,group:"Back – Upper",name:"Resistance Band Lat Pulldown",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:140,group:"Back – Upper",name:"Lat Pulldown (Wide Grip)",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:141,group:"Back – Upper",name:"Assisted Pull-Up Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:142,group:"Back – Upper",name:"Lat Pulldown (Close Grip)",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:143,group:"Back – Upper",name:"Dumbbell Pullover",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:144,group:"Back – Upper",name:"Band-Assisted Pull-Up",level:"Intermediate",equipment:"Resistance Band + Bar",loc:"Both"},
-  {id:145,group:"Back – Upper",name:"Straight-Arm Lat Pushdown",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:146,group:"Back – Upper",name:"Single-Arm Lat Pulldown (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:147,group:"Back – Upper",name:"Pull-Up (Bodyweight)",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:148,group:"Back – Upper",name:"Chin-Up",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:149,group:"Back – Upper",name:"Barbell Pullover",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym"},
-  // ── BACK – MID ──────────────────────────────────────────────────
-  {id:150,group:"Back – Mid",name:"Resistance Band Row",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:151,group:"Back – Mid",name:"TRX / Ring Row",level:"Beginner",equipment:"TRX / Rings",loc:"Both"},
-  {id:152,group:"Back – Mid",name:"Machine Row",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:153,group:"Back – Mid",name:"Cable Face Pull",level:"Beginner",equipment:"Cable Machine",loc:"Gym"},
-  {id:154,group:"Back – Mid",name:"Band Pull-Apart",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:155,group:"Back – Mid",name:"Single-Arm Dumbbell Row",level:"Beginner",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:156,group:"Back – Mid",name:"Chest-Supported Dumbbell Row",level:"Beginner",equipment:"Dumbbell + Incline Bench",loc:"Both"},
-  {id:157,group:"Back – Mid",name:"Seated Cable Row",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:158,group:"Back – Mid",name:"Dumbbell Bent-Over Row",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:159,group:"Back – Mid",name:"Gorilla Row",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:160,group:"Back – Mid",name:"T-Bar Row",level:"Intermediate",equipment:"T-Bar Machine",loc:"Gym"},
-  {id:161,group:"Back – Mid",name:"Landmine Row",level:"Intermediate",equipment:"Barbell + Landmine",loc:"Gym"},
-  {id:162,group:"Back – Mid",name:"Seated Machine Row (Hammer Strength)",level:"Intermediate",equipment:"Machine",loc:"Gym"},
-  {id:163,group:"Back – Mid",name:"Barbell Bent-Over Row",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  // ── CHEST ───────────────────────────────────────────────────────
-  {id:164,group:"Chest",name:"Push-Up (Standard)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:165,group:"Chest",name:"Incline Push-Up",level:"Beginner",equipment:"Bench / Surface",loc:"Both"},
-  {id:166,group:"Chest",name:"Wide Push-Up",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:167,group:"Chest",name:"Pec Deck Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:168,group:"Chest",name:"Chest Press Machine",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:169,group:"Chest",name:"Decline Push-Up",level:"Intermediate",equipment:"Bench",loc:"Both"},
-  {id:170,group:"Chest",name:"Diamond Push-Up",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:171,group:"Chest",name:"Push-Up with Band",level:"Intermediate",equipment:"Resistance Band",loc:"Both"},
-  {id:172,group:"Chest",name:"Dumbbell Bench Press (Flat)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:173,group:"Chest",name:"Dumbbell Bench Press (Incline)",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both"},
-  {id:174,group:"Chest",name:"Dumbbell Chest Fly (Flat)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:175,group:"Chest",name:"Dumbbell Chest Fly (Incline)",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both"},
-  {id:176,group:"Chest",name:"Cable Chest Fly (Low to High)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:177,group:"Chest",name:"Cable Chest Fly (High to Low)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:178,group:"Chest",name:"Smith Machine Bench Press",level:"Intermediate",equipment:"Smith Machine",loc:"Gym"},
-  {id:179,group:"Chest",name:"Close-Grip Dumbbell Press",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:180,group:"Chest",name:"Barbell Bench Press (Flat)",level:"Advanced",equipment:"Barbell + Rack",loc:"Gym"},
-  {id:181,group:"Chest",name:"Barbell Bench Press (Incline)",level:"Advanced",equipment:"Barbell + Incline Rack",loc:"Gym"},
-  {id:182,group:"Chest",name:"Dumbbell Bench Press (Decline)",level:"Advanced",equipment:"Dumbbell + Decline Bench",loc:"Gym"},
-  // ── SHOULDERS ───────────────────────────────────────────────────
-  {id:183,group:"Shoulders",name:"Lateral Raise (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:184,group:"Shoulders",name:"Front Raise (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:185,group:"Shoulders",name:"Rear Delt Fly (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:186,group:"Shoulders",name:"Band Pull-Apart",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:187,group:"Shoulders",name:"Lateral Raise (Resistance Band)",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:188,group:"Shoulders",name:"Machine Shoulder Press",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:189,group:"Shoulders",name:"Face Pull (Cable)",level:"Beginner",equipment:"Cable Machine",loc:"Gym"},
-  {id:190,group:"Shoulders",name:"Reverse Pec Deck",level:"Beginner",equipment:"Machine",loc:"Gym"},
-  {id:191,group:"Shoulders",name:"Arnold Press",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:192,group:"Shoulders",name:"Dumbbell Shoulder Press (Seated)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:193,group:"Shoulders",name:"Dumbbell Shoulder Press (Standing)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:194,group:"Shoulders",name:"Lateral Raise (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:195,group:"Shoulders",name:"Upright Row (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:196,group:"Shoulders",name:"Rear Delt Fly (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:197,group:"Shoulders",name:"Landmine Press",level:"Intermediate",equipment:"Barbell + Landmine",loc:"Gym"},
-  {id:198,group:"Shoulders",name:"Pike Push-Up",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:199,group:"Shoulders",name:"Barbell Overhead Press",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:200,group:"Shoulders",name:"Upright Row (Barbell)",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:201,group:"Shoulders",name:"Handstand Push-Up (Wall)",level:"Advanced",equipment:"Wall",loc:"Both"},
-  // ── BICEPS ──────────────────────────────────────────────────────
-  {id:202,group:"Biceps",name:"Dumbbell Bicep Curl",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:203,group:"Biceps",name:"Hammer Curl",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:204,group:"Biceps",name:"Resistance Band Curl",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:205,group:"Biceps",name:"Alternating Dumbbell Curl",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:206,group:"Biceps",name:"Concentration Curl",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:207,group:"Biceps",name:"Incline Dumbbell Curl",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both"},
-  {id:208,group:"Biceps",name:"Spider Curl",level:"Intermediate",equipment:"Dumbbell + Incline Bench",loc:"Both"},
-  {id:209,group:"Biceps",name:"Cross-Body Hammer Curl",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:210,group:"Biceps",name:"Preacher Curl (EZ Bar)",level:"Intermediate",equipment:"EZ Bar + Preacher Bench",loc:"Gym"},
-  {id:211,group:"Biceps",name:"EZ Bar Curl",level:"Intermediate",equipment:"EZ Bar",loc:"Gym"},
-  {id:212,group:"Biceps",name:"Cable Curl (Straight Bar)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:213,group:"Biceps",name:"Cable Curl (Rope)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:214,group:"Biceps",name:"High Cable Curl",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:215,group:"Biceps",name:"Barbell Curl",level:"Intermediate",equipment:"Barbell",loc:"Gym"},
-  {id:216,group:"Biceps",name:"21s (Dumbbell or Barbell)",level:"Intermediate",equipment:"Dumbbell / Barbell",loc:"Both"},
-  {id:217,group:"Biceps",name:"Chin-Up (Bicep Focus)",level:"Advanced",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:218,group:"Biceps",name:"Zottman Curl",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  // ── TRICEPS ─────────────────────────────────────────────────────
-  {id:219,group:"Triceps",name:"Tricep Dips (Chair / Bench)",level:"Beginner",equipment:"Chair / Bench",loc:"Both"},
-  {id:220,group:"Triceps",name:"Close-Grip Push-Up",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:221,group:"Triceps",name:"Resistance Band Tricep Kickback",level:"Beginner",equipment:"Resistance Band",loc:"Both"},
-  {id:222,group:"Triceps",name:"Tricep Kickback (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:223,group:"Triceps",name:"Tricep Pushdown (Rope)",level:"Beginner",equipment:"Cable Machine",loc:"Gym"},
-  {id:224,group:"Triceps",name:"Tricep Pushdown (Straight Bar)",level:"Beginner",equipment:"Cable Machine",loc:"Gym"},
-  {id:225,group:"Triceps",name:"Tricep Pushdown (V-Bar)",level:"Beginner",equipment:"Cable Machine",loc:"Gym"},
-  {id:226,group:"Triceps",name:"Overhead Tricep Extension (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:227,group:"Triceps",name:"Skull Crusher (Dumbbell)",level:"Intermediate",equipment:"Dumbbell + Bench",loc:"Both"},
-  {id:228,group:"Triceps",name:"Skull Crusher (EZ Bar)",level:"Intermediate",equipment:"EZ Bar + Bench",loc:"Gym"},
-  {id:229,group:"Triceps",name:"Overhead Tricep Extension (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:230,group:"Triceps",name:"Tricep Kickback (Cable)",level:"Intermediate",equipment:"Cable Machine",loc:"Gym"},
-  {id:231,group:"Triceps",name:"Diamond Push-Up",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:232,group:"Triceps",name:"Tate Press",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  {id:233,group:"Triceps",name:"JM Press",level:"Advanced",equipment:"Barbell / EZ Bar",loc:"Gym"},
-  {id:234,group:"Triceps",name:"Parallel Bar Dip",level:"Advanced",equipment:"Dip Station",loc:"Gym"},
-  {id:235,group:"Triceps",name:"Close-Grip Bench Press",level:"Advanced",equipment:"Barbell + Bench",loc:"Gym"},
-  // ── FOREARMS ────────────────────────────────────────────────────
-  {id:236,group:"Forearms",name:"Wrist Curl (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:237,group:"Forearms",name:"Reverse Wrist Curl (Dumbbell)",level:"Beginner",equipment:"Dumbbell",loc:"Both"},
-  {id:238,group:"Forearms",name:"Dead Hang",level:"Intermediate",equipment:"Pull-Up Bar",loc:"Both"},
-  {id:239,group:"Forearms",name:"Farmer's Carry (Grip Focus)",level:"Intermediate",equipment:"Dumbbell / Kettlebell",loc:"Both"},
-  {id:240,group:"Forearms",name:"Plate Pinch",level:"Intermediate",equipment:"Weight Plate",loc:"Gym"},
-  {id:241,group:"Forearms",name:"Reverse Barbell Curl",level:"Intermediate",equipment:"Barbell",loc:"Gym"},
-  {id:242,group:"Forearms",name:"Behind-the-Back Wrist Curl",level:"Intermediate",equipment:"Barbell",loc:"Gym"},
-  {id:243,group:"Forearms",name:"Towel Pull-Up",level:"Advanced",equipment:"Towel + Pull-Up Bar",loc:"Both"},
-  // ── FULL BODY ───────────────────────────────────────────────────
-  {id:244,group:"Full Body",name:"Modified Burpee (No Push-Up)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:245,group:"Full Body",name:"Step-Up with Knee Drive",level:"Beginner",equipment:"Box / Step",loc:"Both"},
-  {id:246,group:"Full Body",name:"Dumbbell Deadlift to Row",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:247,group:"Full Body",name:"Kettlebell Swing",level:"Intermediate",equipment:"Kettlebell",loc:"Both"},
-  {id:248,group:"Full Body",name:"Dumbbell Thruster",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:249,group:"Full Body",name:"Burpee",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:250,group:"Full Body",name:"Box Jump",level:"Intermediate",equipment:"Box",loc:"Both"},
-  {id:251,group:"Full Body",name:"Squat to Press (Dumbbell)",level:"Intermediate",equipment:"Dumbbell",loc:"Both"},
-  {id:252,group:"Full Body",name:"Medicine Ball Slam",level:"Intermediate",equipment:"Medicine Ball",loc:"Both"},
-  {id:253,group:"Full Body",name:"Renegade Row",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  {id:254,group:"Full Body",name:"Turkish Get-Up",level:"Advanced",equipment:"Kettlebell / Dumbbell",loc:"Both"},
-  {id:255,group:"Full Body",name:"Man Maker",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  {id:256,group:"Full Body",name:"Devil Press",level:"Advanced",equipment:"Dumbbell",loc:"Both"},
-  {id:257,group:"Full Body",name:"Kettlebell Snatch",level:"Advanced",equipment:"Kettlebell",loc:"Both"},
-  {id:258,group:"Full Body",name:"Power Clean",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:259,group:"Full Body",name:"Bear Complex",level:"Advanced",equipment:"Barbell",loc:"Gym"},
-  {id:260,group:"Full Body",name:"Battle Ropes",level:"Intermediate",equipment:"Battle Ropes",loc:"Gym"},
-  {id:261,group:"Full Body",name:"Sled Push",level:"Intermediate",equipment:"Sled",loc:"Gym"},
-  // ── CARDIO ──────────────────────────────────────────────────────
-  {id:262,group:"Cardio",name:"Jumping Jacks",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:263,group:"Cardio",name:"High Knees",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:264,group:"Cardio",name:"Butt Kicks",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:265,group:"Cardio",name:"Jump Rope (Standard)",level:"Beginner",equipment:"Jump Rope",loc:"Both"},
-  {id:266,group:"Cardio",name:"Lateral Shuffle",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:267,group:"Cardio",name:"Stair Climb",level:"Beginner",equipment:"Stairs / StairMaster",loc:"Both"},
-  {id:268,group:"Cardio",name:"Speed Skater",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:269,group:"Cardio",name:"Squat Jump",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:270,group:"Cardio",name:"Bear Crawl Sprint",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:271,group:"Cardio",name:"Treadmill Sprint Interval",level:"Intermediate",equipment:"Treadmill",loc:"Gym"},
-  {id:272,group:"Cardio",name:"Stationary Bike (Steady State)",level:"Beginner",equipment:"Stationary Bike",loc:"Gym"},
-  {id:273,group:"Cardio",name:"Stationary Bike (HIIT Sprints)",level:"Advanced",equipment:"Stationary Bike",loc:"Gym"},
-  {id:274,group:"Cardio",name:"Rowing Machine (Steady State)",level:"Beginner",equipment:"Rower",loc:"Gym"},
-  {id:275,group:"Cardio",name:"Rowing Machine (Interval)",level:"Intermediate",equipment:"Rower",loc:"Gym"},
-  {id:276,group:"Cardio",name:"Elliptical",level:"Beginner",equipment:"Elliptical Machine",loc:"Gym"},
-  {id:277,group:"Cardio",name:"Jump Rope (Double Under)",level:"Advanced",equipment:"Jump Rope",loc:"Both"},
-  {id:278,group:"Cardio",name:"Tuck Jump",level:"Advanced",equipment:"None",loc:"Both"},
-  // ── MOBILITY ────────────────────────────────────────────────────
-  {id:279,group:"Mobility",name:"Hip Flexor Stretch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:280,group:"Mobility",name:"Pigeon Pose",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:281,group:"Mobility",name:"Cat-Cow",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:282,group:"Mobility",name:"90/90 Hip Stretch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:283,group:"Mobility",name:"Glute Stretch (Lying)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:284,group:"Mobility",name:"Standing Quad Stretch",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:285,group:"Mobility",name:"Hamstring Stretch (Standing)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:286,group:"Mobility",name:"Calf Stretch (Wall)",level:"Beginner",equipment:"Wall",loc:"Both"},
-  {id:287,group:"Mobility",name:"Foam Roll – Glutes / IT Band",level:"Beginner",equipment:"Foam Roller",loc:"Both"},
-  {id:288,group:"Mobility",name:"Foam Roll – Quads",level:"Beginner",equipment:"Foam Roller",loc:"Both"},
-  {id:289,group:"Mobility",name:"Foam Roll – Hamstrings",level:"Beginner",equipment:"Foam Roller",loc:"Both"},
-  {id:290,group:"Mobility",name:"Foam Roll – Upper Back",level:"Beginner",equipment:"Foam Roller",loc:"Both"},
-  {id:291,group:"Mobility",name:"Inchworm",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:292,group:"Mobility",name:"Deep Squat Hold",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:293,group:"Mobility",name:"World's Greatest Stretch",level:"Intermediate",equipment:"None",loc:"Both"},
-  {id:294,group:"Mobility",name:"Hip Circle",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:295,group:"Mobility",name:"Leg Swings (Forward & Back)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:296,group:"Mobility",name:"Leg Swings (Side to Side)",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:297,group:"Mobility",name:"Thoracic Spine Rotation",level:"Beginner",equipment:"None",loc:"Both"},
-  {id:298,group:"Mobility",name:"Dynamic Warm-Up (Full Body)",level:"Beginner",equipment:"None",loc:"Both"},
-];
+/* The exercise list now lives in Supabase (public.video_checklist), so
+   exercises Stephanie adds herself show up alongside the original 298.
+   `exercises` is rebuilt from the server response on every load. */
+let exercises = [];
 
 // Build YouTube search URL from exercise name
 function ytSearchUrl(name) {
@@ -553,15 +309,33 @@ function ytSearchUrl(name) {
 }
 
 const GE = {"Glutes":"🍑","Hamstrings":"🦵","Quadriceps":"🦵","Inner Thighs":"🦵","Calves":"🦶","Core – Abs":"💪","Core – Obliques":"💪","Core – Lower Back":"💪","Core – Stability":"💪","Back – Upper":"🏋️","Back – Mid":"🏋️","Chest":"🏋️","Shoulders":"💪","Biceps":"💪","Triceps":"💪","Forearms":"💪","Full Body":"⚡","Cardio":"🏃","Mobility":"🧘"};
-const GROUPS = [...new Set(EXERCISES.map(e => e.group))];
-const TOTAL = EXERCISES.length;
+let GROUPS = [];
+let TOTAL = 0;
+
+/* Reshape the server rows into the flat form the renderers use, keeping the
+   muscle-group order the original 298 established (ids ascending). */
+function rebuildExercises() {
+  exercises = Object.values(state)
+    .sort((a, b) => a.checklist_id - b.checklist_id)
+    .map(row => ({
+      id: row.checklist_id,
+      group: row.muscle_group,
+      name: row.name,
+      level: row.level || 'Beginner',
+      equipment: row.equipment || 'None',
+      loc: row.location || 'Both',
+      custom: !!row.is_custom,
+    }));
+  GROUPS = [...new Set(exercises.map(e => e.group))];
+  TOTAL = exercises.length;
+}
 
 let activeGroup = 'All', activeLevel = 'All', activeLoc = 'All', searchQ = '', uncheckedOnly = false, activeModal = null;
 
 /* ── Server-backed state ────────────────────────────────────────────
    Checkoffs and uploads live in Supabase (public.video_checklist), so
    they survive a refresh and follow her to any device. `state` mirrors
-   that table, keyed by the checklist ids in EXERCISES above. */
+   that table, and `exercises` is derived from it. */
 const KEY_STORAGE = 'tf_key';
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 let apiKey = '';
@@ -647,6 +421,7 @@ async function submitPassword(event) {
 function applyItems(items) {
   state = {};
   items.forEach(item => { state[item.checklist_id] = item; });
+  rebuildExercises();
   renderPills();
   renderContent();
   updateStats();
@@ -704,7 +479,7 @@ async function migrateLegacyCheckoffs() {
 }
 
 function filtered() {
-  return EXERCISES.filter(e => {
+  return exercises.filter(e => {
     if (activeGroup !== 'All' && e.group !== activeGroup) return false;
     if (activeLevel !== 'All' && e.level !== activeLevel) return false;
     if (activeLoc === 'Home' && e.loc === 'Gym') return false;
@@ -774,14 +549,14 @@ async function toggleCheck(id, event) {
 function updateGroupCount(group) {
   const el = document.getElementById('gcount-' + group.replace(/[^a-z0-9]/gi,'_'));
   if (!el) return;
-  const exs = EXERCISES.filter(e => e.group === group);
+  const exs = exercises.filter(e => e.group === group);
   el.textContent = exs.filter(e => isDone(e.id)).length + '/' + exs.length + ' recorded';
 }
 
 function updateStats() {
   const filt = filtered();
-  const done = EXERCISES.filter(e => isDone(e.id)).length;
-  const pct = Math.round(done / TOTAL * 100);
+  const done = exercises.filter(e => isDone(e.id)).length;
+  const pct = TOTAL ? Math.round(done / TOTAL * 100) : 0;
   document.getElementById('stat-done').textContent = done;
   document.getElementById('stat-left').textContent = TOTAL - done;
   document.getElementById('stat-pct').textContent = pct + '%';
@@ -791,7 +566,7 @@ function updateStats() {
 
 function openModal(id) {
   activeModal = id;
-  const ex = EXERCISES.find(e => e.id === id);
+  const ex = exercises.find(e => e.id === id);
   if (!ex) return;
   document.getElementById('modal-title').textContent = ex.name;
   document.getElementById('modal-meta').innerHTML =
@@ -934,6 +709,117 @@ async function onFilePicked(input) {
   }
 }
 
+/* ── Her own exercises: add, edit, delete ─────────────────────────── */
+const NEW_GROUP = '__new__';
+let editingId = null;
+
+function toggleNewGroupField() {
+  const isNew = document.getElementById('form-group').value === NEW_GROUP;
+  document.getElementById('form-newgroup-field').style.display = isNew ? 'block' : 'none';
+  if (isNew) document.getElementById('form-newgroup').focus();
+}
+
+function openExerciseForm(id) {
+  editingId = Number.isInteger(id) ? id : null;
+  const row = editingId === null ? null : state[editingId];
+
+  document.getElementById('form-title').textContent = row ? 'Edit exercise' : 'Add an exercise';
+  document.getElementById('form-submit').textContent = row ? 'Save changes' : 'Add exercise';
+  document.getElementById('form-delete').style.display = row ? 'block' : 'none';
+  document.getElementById('form-error').textContent = '';
+
+  document.getElementById('form-group').innerHTML =
+    GROUPS.map(g => '<option value="' + escapeHtml(g) + '">' + escapeHtml(g) + '</option>').join('') +
+    '<option value="' + NEW_GROUP + '">+ New muscle group…</option>';
+
+  document.getElementById('form-name').value = row ? row.name : '';
+  document.getElementById('form-group').value = row ? row.muscle_group : (GROUPS[0] || NEW_GROUP);
+  document.getElementById('form-level').value = row ? (row.level || 'Beginner') : 'Beginner';
+  document.getElementById('form-loc').value = row ? (row.location || 'Both') : 'Both';
+  document.getElementById('form-equipment').value = row && row.equipment ? row.equipment : '';
+  document.getElementById('form-newgroup').value = '';
+  toggleNewGroupField();
+
+  document.getElementById('form-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.getElementById('form-name').focus();
+}
+
+function closeExerciseForm(event) {
+  if (event && event.target !== document.getElementById('form-modal')) return;
+  document.getElementById('form-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+async function submitExerciseForm(event) {
+  event.preventDefault();
+  const submit = document.getElementById('form-submit');
+  const error = document.getElementById('form-error');
+  const groupChoice = document.getElementById('form-group').value;
+  const payload = {
+    name: document.getElementById('form-name').value.trim(),
+    muscle_group: groupChoice === NEW_GROUP
+      ? document.getElementById('form-newgroup').value.trim()
+      : groupChoice,
+    level: document.getElementById('form-level').value,
+    location: document.getElementById('form-loc').value,
+    equipment: document.getElementById('form-equipment').value.trim() || 'None',
+  };
+
+  if (!payload.name) { error.textContent = 'Give the exercise a name.'; return; }
+  if (!payload.muscle_group) { error.textContent = 'Pick or name a muscle group.'; return; }
+
+  const editing = editingId !== null;
+  if (editing) payload.checklist_id = editingId;
+
+  submit.disabled = true;
+  submit.textContent = editing ? 'Saving…' : 'Adding…';
+  error.textContent = '';
+  setSync('saving', 'Saving…');
+
+  try {
+    const { items } = await api('/exercises', {
+      method: editing ? 'PATCH' : 'POST',
+      body: JSON.stringify(payload),
+    });
+    applyItems(items);
+    updateStats();
+    setSync('', 'Saved to Supabase');
+    closeExerciseForm();
+    toast(editing ? 'Exercise updated.' : '"' + payload.name + '" added to the checklist.');
+  } catch (apiError) {
+    if (apiError.status === 401) { handleApiError(apiError, ''); return; }
+    error.textContent = apiError.message;
+    setSync('error', 'Not saved');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = editing ? 'Save changes' : 'Add exercise';
+  }
+}
+
+async function deleteExercise() {
+  if (editingId === null) return;
+  const row = state[editingId];
+  const warning = row && row.video_path
+    ? '\n\nIts uploaded video will be deleted too.'
+    : '';
+  if (!confirm('Remove "' + (row ? row.name : 'this exercise') + '" from the checklist?' + warning)) return;
+
+  setSync('saving', 'Removing…');
+  try {
+    const { items } = await api('/exercises?checklist_id=' + editingId, { method: 'DELETE' });
+    applyItems(items);
+    updateStats();
+    setSync('', 'Saved to Supabase');
+    closeExerciseForm();
+    toast('Exercise removed.');
+  } catch (error) {
+    document.getElementById('form-error').textContent = error.message;
+    setSync('error', 'Not saved');
+  }
+}
+
 async function removeVideo() {
   if (activeModal === null || uploading) return;
   const id = activeModal;
@@ -1004,6 +890,9 @@ function renderContent() {
             ' title="' + (hasVideo(ex.id) ? 'Replace your demo video' : 'Upload your demo video') + '"' +
             ' onclick="event.stopPropagation();uploadFor(' + ex.id + ')">📹 <span class="upload-btn-label">' +
             (hasVideo(ex.id) ? 'Replace' : 'Upload') + '</span></button>' +
+          // Only her own additions can be edited; the original 298 are locked.
+          (ex.custom ? '<button class="edit-btn" title="Edit or remove this exercise"' +
+            ' onclick="event.stopPropagation();openExerciseForm(' + ex.id + ')">✏️</button>' : '') +
           '</div>';
       }).join('') + '</div>';
   }).join('');

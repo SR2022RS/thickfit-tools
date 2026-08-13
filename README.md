@@ -12,7 +12,12 @@ Browser  ──password──▶  /api/*  ──service role key──▶  Supab
    └──────────── video file, direct via signed URL ───────────▶ Storage
 ```
 
-- **Checkoffs** live in `public.video_checklist` (298 rows, keyed 1–298).
+- **The exercise list itself** lives in `public.video_checklist` — the page renders
+  from the database, not from a hardcoded array, so exercises added in the app appear
+  like any other. The original 298 are ids 1–298 with `is_custom = false`; additions
+  get ids from a sequence starting at 1000 and `is_custom = true`.
+- **Only `is_custom` rows can be edited or deleted.** The original 298 are locked at
+  the API, so the core checklist can't be damaged by accident.
 - **Videos** live in the private `exercise-demos` bucket, played back through
   short-lived signed URLs.
 - **Uploads go browser → Supabase directly** using a signed upload URL. They never
@@ -49,6 +54,9 @@ Locally, the same values go in `.env` (gitignored — see `.env.example`), and
 3. Tap **Watch** for the detail view: YouTube reference search, and **Upload your
    recording** for your own demo.
 4. Uploading a video ticks the exercise off automatically. Rows with a video show 🎬.
+5. **+ Add exercise** adds one that isn't in the 298 — pick an existing muscle group or
+   name a new one. Your own additions carry a ✏️ for editing or removing them; deleting
+   one takes its video with it.
 
 ## Known limits
 
@@ -73,3 +81,4 @@ Locally, the same values go in `.env` (gitignored — see `.env.example`), and
 | `api/checklist.js` | `GET` the list, `PATCH` a checkoff or note |
 | `api/upload.js` | `POST` signed upload URL, `PATCH` to attach, `DELETE` to remove |
 | `api/video.js` | `GET` a signed playback URL |
+| `api/exercises.js` | `POST` add an exercise, `PATCH` edit, `DELETE` remove (custom only) |
