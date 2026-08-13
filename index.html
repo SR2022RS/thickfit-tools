@@ -70,6 +70,12 @@
   .loc-icon { font-size: 12px; flex-shrink: 0; }
   .watch-btn { display: inline-flex; align-items: center; gap: 5px; background: var(--black); color: var(--white); border: none; border-radius: 5px; padding: 5px 12px; font-size: 11px; font-weight: 600; text-decoration: none; flex-shrink: 0; transition: background 0.15s; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .watch-btn:hover { background: var(--gray-800); }
+  /* Upload sits on the row itself — behind "Watch" it was undiscoverable. */
+  .upload-btn { display: inline-flex; align-items: center; gap: 5px; background: var(--white); color: var(--black); border: 1.5px solid var(--gray-200); border-radius: 5px; padding: 4px 10px; font-size: 11px; font-weight: 600; flex-shrink: 0; transition: all 0.15s; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .upload-btn:hover { border-color: var(--black); }
+  .upload-btn.has-video { border-color: var(--green-border); background: var(--green-bg); color: var(--green); }
+  .upload-btn-label { display: none; }
+  @media (min-width: 620px) { .upload-btn-label { display: inline; } }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 1rem; }
   .modal-box { background: var(--white); border-radius: 10px; width: min(480px, 100%); border: 1.5px solid var(--gray-200); overflow: hidden; }
   .modal-header { background: var(--black); padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 12px; }
@@ -561,6 +567,7 @@ const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 let apiKey = '';
 let state = {};
 let uploading = false;
+let uploadTarget = null;
 
 const isDone = id => !!(state[id] && state[id].is_recorded);
 const hasVideo = id => !!(state[id] && state[id].video_path);
@@ -717,6 +724,13 @@ function paintRow(id) {
     if (mark) mark.style.display = isDone(id) ? 'block' : 'none';
     const flag = row.querySelector('.video-flag');
     if (flag) flag.textContent = hasVideo(id) ? '🎬' : '';
+    const uploadButton = row.querySelector('.upload-btn');
+    if (uploadButton) {
+      uploadButton.classList.toggle('has-video', hasVideo(id));
+      uploadButton.title = hasVideo(id) ? 'Replace your demo video' : 'Upload your demo video';
+      const label = uploadButton.querySelector('.upload-btn-label');
+      if (label) label.textContent = hasVideo(id) ? 'Replace' : 'Upload';
+    }
     const group = row.closest('[data-group]');
     if (group) updateGroupCount(group.dataset.group);
   }
@@ -816,7 +830,9 @@ async function renderVideoBlock(id) {
   try {
     // The bucket is private, so playback runs off a short-lived signed link.
     const { url } = await api('/video?checklist_id=' + id);
-    if (activeModal !== id) return;
+    // An upload may have started while the signed link was in flight —
+    // don't paint over its progress bar.
+    if (activeModal !== id || uploading) return;
     const row = state[id];
     box.innerHTML =
       '<video class="video-player" controls preload="metadata" src="' + escapeHtml(url) + '"></video>' +
@@ -834,6 +850,16 @@ async function renderVideoBlock(id) {
 
 function pickVideo() {
   if (uploading) return;
+  uploadTarget = activeModal;
+  document.getElementById('file-input').click();
+}
+
+/* Upload straight from a list row. Opens the detail panel first so the
+   progress bar and the finished video have somewhere to appear. */
+function uploadFor(id) {
+  if (uploading) return;
+  openModal(id);
+  uploadTarget = id;
   document.getElementById('file-input').click();
 }
 
@@ -858,9 +884,9 @@ function putWithProgress(url, file, onProgress) {
 async function onFilePicked(input) {
   const file = input.files && input.files[0];
   input.value = '';
-  if (!file || activeModal === null || uploading) return;
+  if (!file || uploadTarget === null || uploading) return;
 
-  const id = activeModal;
+  const id = uploadTarget;
   if (file.size > MAX_UPLOAD_BYTES) {
     toast('That file is ' + (file.size / 1048576).toFixed(0) + ' MB. The limit is 50 MB.', true);
     return;
@@ -974,6 +1000,10 @@ function renderContent() {
           '<span class="equip-tag">' + ex.equipment + '</span>' +
           '<span class="loc-icon">' + li + '</span>' +
           '<button class="watch-btn" onclick="event.stopPropagation();openModal(' + ex.id + ')">▶ Watch</button>' +
+          '<button class="upload-btn' + (hasVideo(ex.id) ? ' has-video' : '') + '" id="up-' + ex.id + '"' +
+            ' title="' + (hasVideo(ex.id) ? 'Replace your demo video' : 'Upload your demo video') + '"' +
+            ' onclick="event.stopPropagation();uploadFor(' + ex.id + ')">📹 <span class="upload-btn-label">' +
+            (hasVideo(ex.id) ? 'Replace' : 'Upload') + '</span></button>' +
           '</div>';
       }).join('') + '</div>';
   }).join('');
